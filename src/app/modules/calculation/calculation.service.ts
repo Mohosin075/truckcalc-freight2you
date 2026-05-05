@@ -32,6 +32,35 @@ const createCalculationIntoDB = async (userId: Types.ObjectId, payload: ICalcula
     data.ownerPay = data.totalRevenue * (1 - driverRatio);
   }
 
+  // Apply Rate Planner formulas if type is GOAL
+  if (payload.type === 'GOAL' && payload.goalData) {
+    const data = payload.goalData;
+    // B5: daysPerWeek, B7: maxMilesPerDay
+    data.loadedMilesNeeded = data.daysPerWeek * data.maxMilesPerDay; // E2
+
+    if (data.loadedMilesNeeded > 0) {
+      // MINIMUM TARGET RATE PER MILE NEEDED = B3+(B2/E2)
+      data.minTargetRate = data.costPerMile + (data.desiredWeeklyProfit / data.loadedMilesNeeded); // E4
+    } else {
+      data.minTargetRate = 0;
+    }
+
+    // SUGGESTED MAX DEADHEAD PER DAY = B7*0.15
+    data.maxDHPerDay = data.maxMilesPerDay * 0.15; // E7
+    // SUGGESTED MAX DEADHEAD PER WEEK = E7*B5
+    data.maxDHPerWeek = data.maxDHPerDay * data.daysPerWeek; // E8
+
+    // Total Revenue = E2*E4 + E8*B4
+    data.totalRevenue = (data.loadedMilesNeeded * data.minTargetRate) + (data.maxDHPerWeek * data.deadheadPayPerMile);
+    // Total Cost = B3 * (E2 + E8)  -- Assuming total miles = loaded + deadhead
+    data.totalCost = data.costPerMile * (data.loadedMilesNeeded + data.maxDHPerWeek);
+
+    const driverRatio = data.driverPercentage / 100;
+    // Using desiredWeeklyProfit as the base for earnings split if it's the goal
+    data.driverPay = data.desiredWeeklyProfit * driverRatio;
+    data.ownerPay = data.desiredWeeklyProfit * (1 - driverRatio);
+  }
+
   const result = await Calculation.create(payload);
   return result;
 };
