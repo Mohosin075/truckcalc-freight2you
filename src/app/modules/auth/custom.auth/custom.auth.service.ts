@@ -15,6 +15,7 @@ import { jwtHelper } from '../../../../helpers/jwtHelper'
 import { JwtPayload } from 'jsonwebtoken'
 import { IUser } from '../../user/user.interface'
 import { emailHelper } from '../../../../helpers/emailHelper'
+import { ActivityService } from '../../activity/activity.service'
 // import { emailQueue } from '../../../../helpers/bull-mq-producer'
 
 const createUser = async (payload: IUser) => {
@@ -62,6 +63,13 @@ const createUser = async (payload: IUser) => {
   if (!user) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create user.')
   }
+
+  // Log activity
+  await ActivityService.logActivity({
+    user: user._id,
+    type: 'signup',
+    message: `${user.name} joined TruckCalc`,
+  });
 
   return {
     success: true,

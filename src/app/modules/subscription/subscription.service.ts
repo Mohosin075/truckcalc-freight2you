@@ -16,6 +16,7 @@ import {
 } from './subscription.interface'
 import { emailNotificationService } from './email-notification.service'
 import QueryBuilder from '../../builder/QueryBuilder'
+import { ActivityService } from '../activity/activity.service'
 
 
 
@@ -157,6 +158,13 @@ class SubscriptionService {
       })
 
       await subscription.save()
+
+      // Log activity
+      await ActivityService.logActivity({
+        user: new Types.ObjectId(userId),
+        type: 'subscription',
+        message: `${(user as any).fullName || user.name} upgraded to ${plan.name}`,
+      });
 
       // Update user profile with subscription info
       await User.findByIdAndUpdate(userId, {
