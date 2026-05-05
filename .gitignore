@@ -1,0 +1,16 @@
+node_modules
+dist
+logs
+*.log
+.env
+.vscode/
+.vercel
+uploads/
+*.tsbuildinfo
+yarn.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.husky/_
+
+firebase-service-account.json
