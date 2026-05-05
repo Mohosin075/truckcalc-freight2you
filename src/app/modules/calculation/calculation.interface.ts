@@ -17,6 +17,9 @@ export type ILoadCalculation = {
   totalDH: number;
   totalMiles: number;
   compensationPerMile: number;
+  costPerMile: number;
+  totalCost: number;
+  profitPerMile: number;
   driverPay: number;
   ownerPay: number;
 };

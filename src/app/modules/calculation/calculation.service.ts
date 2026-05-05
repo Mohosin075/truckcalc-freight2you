@@ -8,6 +8,30 @@ import dayjs from 'dayjs';
 
 const createCalculationIntoDB = async (userId: Types.ObjectId, payload: ICalculation) => {
   payload.user = userId;
+
+  // Apply Load Calculator formulas if type is LOAD
+  if (payload.type === 'LOAD' && payload.loadData) {
+    const data = payload.loadData;
+    data.totalFSC = data.fuelSurcharge * data.loadedMiles;
+    data.totalDH = data.dhMiles * data.dhRate;
+    data.totalRevenue = (data.baseRate * data.loadedMiles) + data.totalFSC + data.tolls + data.totalDH + data.bonus;
+    data.totalMiles = data.loadedMiles + data.dhMiles;
+    
+    if (data.totalMiles > 0) {
+      data.compensationPerMile = data.totalRevenue / data.totalMiles;
+    } else {
+      data.compensationPerMile = 0;
+    }
+
+    data.totalCost = data.costPerMile * data.totalMiles;
+    data.profitPerMile = data.compensationPerMile - data.costPerMile;
+    data.totalProfit = data.totalMiles * data.profitPerMile;
+
+    const driverRatio = data.driverPercentage / 100;
+    data.driverPay = data.totalRevenue * driverRatio;
+    data.ownerPay = data.totalRevenue * (1 - driverRatio);
+  }
+
   const result = await Calculation.create(payload);
   return result;
 };

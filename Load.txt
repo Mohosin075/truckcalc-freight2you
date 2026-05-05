@@ -1,0 +1,14 @@
+Total FSC $ = B3*B6
+Total DH$ = B7*B8
+
+
+Total Revenue=(B2*B6) + B4 + B5 + B9 + B10
+
+Total Miles=B6 + B7
+Total Cost=(B15*B12)
+Profit Per Mile=B13 - B15
+Total Profit=sum (B12 * B17)
+Driver=B11*C20
+Owner =B11*C21
+
+

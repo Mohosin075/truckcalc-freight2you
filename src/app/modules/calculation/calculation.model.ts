@@ -16,6 +16,9 @@ const loadDataSchema = new Schema({
   totalDH: { type: Number, required: true },
   totalMiles: { type: Number, required: true },
   compensationPerMile: { type: Number, required: true },
+  costPerMile: { type: Number, required: true },
+  totalCost: { type: Number, required: true },
+  profitPerMile: { type: Number, required: true },
   driverPay: { type: Number, required: true },
   ownerPay: { type: Number, required: true },
 }, { _id: false });

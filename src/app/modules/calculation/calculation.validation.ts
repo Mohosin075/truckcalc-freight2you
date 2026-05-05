@@ -15,6 +15,9 @@ const loadDataValidationSchema = z.object({
   totalDH: z.number(),
   totalMiles: z.number(),
   compensationPerMile: z.number(),
+  costPerMile: z.number(),
+  totalCost: z.number(),
+  profitPerMile: z.number(),
   driverPay: z.number(),
   ownerPay: z.number(),
 });
