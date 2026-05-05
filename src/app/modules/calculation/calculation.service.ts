@@ -61,6 +61,52 @@ const createCalculationIntoDB = async (userId: Types.ObjectId, payload: ICalcula
     data.ownerPay = data.desiredWeeklyProfit * (1 - driverRatio);
   }
 
+  // Apply CPM Calculator formulas if type is COST
+  if (payload.type === 'COST' && payload.costData) {
+    const data = payload.costData;
+
+    // 1. WEEKLY FIXED COSTS
+    data.totalWeeklyFixed =
+      data.insurance +
+      data.truckPayment +
+      data.escrow +
+      data.repairSavings +
+      data.driverPayFixed +
+      data.permits +
+      data.otherFixed;
+
+    // 2. VARIABLE COSTS
+    // Weekly Fuel Cost = (Miles Driven / MPG) * Fuel Price
+    if (data.avgMPG > 0) {
+      data.weeklyFuelCost = (data.milesPerWeek / data.avgMPG) * data.fuelPrice;
+    } else {
+      data.weeklyFuelCost = 0;
+    }
+
+    // Weekly Oil Change Cost = (Oil Changes Per Year * Cost Per Oil Change) / 52
+    data.weeklyOilChangeCost = (data.oilChangesPerYear * data.costPerOilChange) / 52;
+    // Weekly Tire Cost = Tire Cost Per Year / 52
+    data.weeklyTireCost = data.tireCostPerYear / 52;
+    // Weekly Maintenance Cost = Maintenance Cost Per Year / 52
+    data.weeklyMaintenanceCost = data.maintenanceCostPerYear / 52;
+
+    data.totalWeeklyVariable =
+      data.weeklyFuelCost +
+      data.weeklyOilChangeCost +
+      data.weeklyTireCost +
+      data.weeklyMaintenanceCost;
+
+    // 3. FINAL OPERATING COST
+    data.totalWeeklyOperatingCost = data.totalWeeklyFixed + data.totalWeeklyVariable;
+
+    // TRUE COST PER MILE = Total Weekly Operating Cost / Miles Driven Per Week
+    if (data.milesPerWeek > 0) {
+      data.trueCPM = data.totalWeeklyOperatingCost / data.milesPerWeek;
+    } else {
+      data.trueCPM = 0;
+    }
+  }
+
   const result = await Calculation.create(payload);
   return result;
 };
