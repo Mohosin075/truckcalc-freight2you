@@ -33,7 +33,7 @@ async function main() {
       typeof config.port === 'number' ? config.port : Number(config.port)
 
     const host = (config.ip_address as string) || '0.0.0.0'
-    server = app.listen(port, '0.0.0.0', () => {
+    server = app.listen(port, host, () => {
       console.log(colors.yellow(`♻️  Server is running on:`))
       console.log(colors.cyan(`   - Local:    http://localhost:${port}`))
 

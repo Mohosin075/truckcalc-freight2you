@@ -1,5 +1,5 @@
 import { Model, Types } from 'mongoose'
-import { InterestCategory, USER_ROLES, USER_STATUS } from '../../../enum/user'
+import { USER_ROLES, USER_STATUS } from '../../../enum/user'
 
 export interface IUserFilterables {
   searchTerm?: string
@@ -45,7 +45,6 @@ export interface IUser {
   profile?: string
   phone?: string
   description?: string
-  interest?: InterestCategory[]
 
   dateOfBirth?: Date
 

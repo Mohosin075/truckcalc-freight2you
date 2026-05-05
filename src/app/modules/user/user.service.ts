@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes'
 import ApiError from '../../../errors/ApiError'
 import { IUser, IUserFilterables } from './user.interface'
 import { User } from './user.model'
-import { InterestCategory, USER_ROLES, USER_STATUS } from '../../../enum/user'
+import { USER_ROLES, USER_STATUS } from '../../../enum/user'
 
 import { JwtPayload } from 'jsonwebtoken'
 import { paginationHelper } from '../../../helpers/paginationHelper'
@@ -258,31 +258,6 @@ export const getProfile = async (user: JwtPayload) => {
   return isUserExist
 }
 
-const addUserInterest = async (
-  userId: string,
-  interest: InterestCategory[],
-): Promise<IUser | null> => {
-  const isUserExist = await User.findOne({
-    _id: userId,
-    status: { $nin: [USER_STATUS.DELETED] },
-  })
-  if (!isUserExist) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found.')
-  }
-  const updatedUser = await User.findOneAndUpdate(
-    { _id: userId, status: { $nin: [USER_STATUS.DELETED] } },
-    { $set: { interest } },
-    { new: true },
-  )
-  if (!updatedUser) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Failed to update user interest.',
-    )
-  }
-  return updatedUser
-}
-
 export const UserServices = {
   updateProfile,
   createAdmin,
@@ -292,5 +267,4 @@ export const UserServices = {
   updateUserStatus,
   getProfile,
   deleteProfile,
-  addUserInterest,
 }

@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose'
 import bcrypt from 'bcrypt'
 import { IUser, UserModel } from './user.interface'
-import { InterestCategory, USER_ROLES, USER_STATUS } from '../../../enum/user'
+import { USER_ROLES, USER_STATUS } from '../../../enum/user'
 
 // ------------------ USER SCHEMA ------------------
 const UserSchema = new Schema<IUser, UserModel>(
@@ -11,7 +11,6 @@ const UserSchema = new Schema<IUser, UserModel>(
     profile: { type: String, default: "/images/1767048629458-l94gk7.jpg" },
     phone: { type: String },
     description: { type: String },
-    interest: { type: [String], enum: Object.values(InterestCategory) },
 
     status: {
       type: String,

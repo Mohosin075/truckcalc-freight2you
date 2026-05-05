@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { InterestCategory, USER_ROLES, USER_STATUS } from '../../../enum/user'
+import { USER_ROLES, USER_STATUS } from '../../../enum/user'
 
 // ------------------ SUB-SCHEMAS ------------------
 const addressSchema = z.object({
@@ -43,16 +43,15 @@ export const updateUserSchema = z.object({
       appId: z.string().optional(),
       deviceToken: z.string().optional(),
 
-      // --- Cycle Tracking Fields ---
-      lastPeriodStartDate: z.string().datetime().optional(),
-      cycleLength: z.number().min(1).optional(),
-      periodLength: z.number().min(1).optional(),
-      isAverageCycleLength: z.boolean().optional(),
-      isAveragePeriodLength: z.boolean().optional(),
       dateOfBirth: z.string().datetime().optional(),
-      dietaryRestrictions: z.array(z.string()).optional(),
       isOnboardingComplete: z.boolean().optional(),
     })
+})
+
+export const updateUserStatusSchema = z.object({
+  body: z.object({
+    status: z.nativeEnum(USER_STATUS),
+  }),
 })
 
 export const STAFF_SPECIALTY = z.enum([
@@ -73,11 +72,5 @@ export const createStaffSchema = z.object({
       })
       .min(1, 'Select at least one specialty'),
     bio: z.string().optional(),
-  }),
-})
-
-export const addUserInterestSchema = z.object({
-  body: z.object({
-    interest: z.array(z.nativeEnum(InterestCategory)).optional(),
   }),
 })

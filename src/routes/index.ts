@@ -9,6 +9,7 @@ import { ChatRoutes } from '../app/modules/chat/chat.routes'
 import { ReviewRoutes } from '../app/modules/review/review.route'
 import { CalculationRoutes } from '../app/modules/calculation/calculation.route'
 import { AdminRoutes } from '../app/modules/admin/admin.route'
+import { SubscriptionRoutes } from '../app/modules/subscription/subscription.route'
 import { StatusCodes } from 'http-status-codes'
 
 const router = express.Router()
@@ -25,6 +26,7 @@ const apiRoutes: { path: string; route: Router }[] = [
   { path: '/review', route: ReviewRoutes },
   { path: '/calculations', route: CalculationRoutes },
   { path: '/admin', route: AdminRoutes },
+  { path: '/subscription', route: SubscriptionRoutes },
 ]
 
 apiRoutes.forEach(route => {

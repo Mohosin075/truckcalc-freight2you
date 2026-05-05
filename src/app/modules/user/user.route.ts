@@ -8,9 +8,9 @@ import { StatusCodes } from 'http-status-codes'
 import { S3Helper } from '../../../helpers/image/s3helper'
 import fileUploadHandler from '../../middleware/fileUploadHandler'
 import {
-  addUserInterestSchema,
   createStaffSchema,
   updateUserSchema,
+  updateUserStatusSchema,
 } from './user.validation'
 import { fileAndBodyProcessorUsingDiskStorage } from '../../middleware/processReqBody'
 
@@ -20,18 +20,6 @@ router.get(
   '/profile',
   auth(USER_ROLES.ADMIN, USER_ROLES.USER, USER_ROLES.SUPER_ADMIN,  ),
   UserController.getProfile,
-)
-
-router.post(
-  '/interest',
-  auth(
-    USER_ROLES.ADMIN,
-    USER_ROLES.USER,
-    USER_ROLES.SUPER_ADMIN,
-     
-  ),
-  validateRequest(addUserInterestSchema),
-  UserController.addUserInterest,
 )
 
 router.patch(
@@ -69,7 +57,7 @@ router
   )
   .patch(
     auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-    // validateRequest(updateUserSchema),
+    validateRequest(updateUserStatusSchema),
     UserController.updateUserStatus,
   )
 

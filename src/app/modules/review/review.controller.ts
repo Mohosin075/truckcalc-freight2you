@@ -47,24 +47,6 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
     data: result,
   })
 })
-const getReviewsByEvent = catchAsync(async (req: Request, res: Response) => {
-  const type = req.params.type as 'reviewer' | 'reviewee'
-  const paginationOptions = pick(req.query, paginationFields)
-  const result = await ReviewServices.getReviewsByEvent(
-    req.user!,
-    req.params.eventId,
-    type,
-    paginationOptions,
-  )
-
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Reviews retrieved successfully',
-    data: result,
-  })
-})
-
 const deleteReview = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params
   const result = await ReviewServices.deleteReview(id, req.user!)
@@ -95,5 +77,4 @@ export const ReviewController = {
   getAllReviews,
   deleteReview,
   getSingleReview,
-  getReviewsByEvent,
 }

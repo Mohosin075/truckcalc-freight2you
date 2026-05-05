@@ -3,7 +3,6 @@ import { IUser } from '../user/user.interface';
 
 export type IReview = {
   _id?: Types.ObjectId;
-  eventId: Types.ObjectId;
   reviewer: Types.ObjectId | IUser;
   reviewee?: Types.ObjectId | IUser;
   rating: number;

@@ -1,5 +1,5 @@
 import { parsePhoneNumberFromString } from 'libphonenumber-js'
-import { InterestCategory, USER_ROLES } from '../../../enum/user'
+import { USER_ROLES } from '../../../enum/user'
 import { z } from 'zod'
 
 const verifyEmailOrPhoneOtpZodSchema = z.object({
@@ -142,9 +142,6 @@ const createUserZodSchema = z.object({
     email: z.string({ required_error: 'Email is required' }).email().optional(),
     password: z.string({ required_error: 'Password is required' }).min(6),
     name: z.string({ required_error: 'Name is required' }).optional(),
-    interest: z
-      .array(z.enum(Object.values(InterestCategory) as [string, ...string[]]))
-      .optional(),
     phone: z
       .string()
       .refine(
