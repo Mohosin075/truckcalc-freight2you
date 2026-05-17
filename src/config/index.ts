@@ -11,6 +11,7 @@ export default {
   port: process.env.PORT,
   cors_origins: [
     '*',
+    'http://localhost:51703',
     'http://195.35.6.13:4005',
     'http://195.35.6.13:4173',
     'http://195.35.6.13:3001',

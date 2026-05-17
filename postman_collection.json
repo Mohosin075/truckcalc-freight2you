@@ -1,0 +1,1136 @@
+{
+  "info": {
+    "name": "truckcalc-freight2you API",
+    "description": "Full Postman collection for testing truckcalc-freight2you backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Server Status",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/api/v1/status",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "status"]
+        }
+      },
+      "response": [
+        {
+          "name": "OK",
+          "status": "OK",
+          "code": 200,
+          "body": "{\"success\":true,\"message\":\"Server is running smoothly\"}"
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Test User\",\"email\":\"testuser@example.com\",\"password\":\"TestPass123\",\"phone\":\"+1234567890\",\"address\":{\"city\":\"Test City\",\"country\":\"Test Country\",\"postalCode\":\"12345\",\"presentAddress\":\"123 Test St\",\"permanentAddress\":\"123 Test St\"}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "signup"]
+            }
+          },
+          "response": [
+            {
+              "name": "Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\"success\":true,\"message\":\"Registration successful and OTP sent to your email\"}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.data) {",
+                  "  pm.environment.set('auth_token', jsonData.data.accessToken || '');",
+                  "  pm.environment.set('refresh_token', jsonData.data.refreshToken || '');",
+                  "}",
+                  "pm.test('Login should succeed', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"testuser@example.com\",\"password\":\"TestPass123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\"success\":true,\"data\":{\"accessToken\":\"<token>\",\"refreshToken\":\"<refresh>\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"admin@example.com\",\"password\":\"AdminPass123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/admin-login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "admin-login"]
+            }
+          }
+        },
+        {
+          "name": "Custom Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"testuser@example.com\",\"password\":\"TestPass123\",\"deviceToken\":\"device-token-123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/custom-login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "custom-login"]
+            }
+          }
+        },
+        {
+          "name": "Verify Account",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"testuser@example.com\",\"oneTimeCode\":\"123456\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/verify-account",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "verify-account"]
+            }
+          }
+        },
+        {
+          "name": "Forget Password",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"testuser@example.com\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/forget-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "forget-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"newPassword\":\"NewPass123\",\"confirmPassword\":\"NewPass123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"testuser@example.com\",\"authType\":\"createAccount\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/resend-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "resend-otp"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"TestPass123\",\"newPassword\":\"NewPass123\",\"confirmPassword\":\"NewPass123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"password\":\"TestPass123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/delete-account",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "delete-account"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refreshToken\":\"{{refresh_token}}\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Social Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"appId\":\"social-app-123\",\"deviceToken\":\"device-token-123\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/social-login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "social-login"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "multipart/form-data"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "name", "value": "Updated User", "type": "text"},
+                {"key": "phone", "value": "+1234567890", "type": "text"},
+                {"key": "description", "value": "Updated profile description.", "type": "text"},
+                {"key": "address.city", "value": "Updated City", "type": "text"},
+                {"key": "address.country", "value": "Updated Country", "type": "text"}
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Delete Profile",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", ""]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", ":userId"]
+            },
+            "description": "Replace :userId with the actual user ID"
+          }
+        },
+        {
+          "name": "Delete User by ID",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", ":userId"]
+            },
+            "description": "Replace :userId with the actual user ID"
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"active\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/user/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "user", ":userId"]
+            },
+            "description": "Replace :userId with the actual user ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Create Page Content",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"type\":\"privacy-policy\",\"content\":\"Privacy policy content goes here.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Public Content by Type",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/privacy-policy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "privacy-policy"]
+            }
+          }
+        },
+        {
+          "name": "Delete Public Content",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", ":id"]
+            },
+            "description": "Replace :id with the actual public content ID"
+          }
+        },
+        {
+          "name": "Update Public Content",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"type\":\"privacy-policy\",\"content\":\"Updated content text.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/update/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "update", ":id"]
+            },
+            "description": "Replace :id with the actual public content ID"
+          }
+        },
+        {
+          "name": "Contact Form",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Contact Sender\",\"email\":\"contact@example.com\",\"phone\":\"+1234567890\",\"country\":\"Country\",\"message\":\"Please reach out to me regarding services.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/contact",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "contact"]
+            }
+          }
+        },
+        {
+          "name": "Create FAQ",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"question\":\"How does this app work?\",\"answer\":\"It helps calculate freight and manage subscription details.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/faq",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "faq"]
+            }
+          }
+        },
+        {
+          "name": "Update FAQ",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"question\":\"How does this application work?\",\"answer\":\"It calculates freight, manages user subscriptions, and supports chat.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/faq/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "faq", ":id"]
+            },
+            "description": "Replace :id with the actual FAQ ID"
+          }
+        },
+        {
+          "name": "Get FAQ by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/faq/single/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "faq", "single", ":id"]
+            },
+            "description": "Replace :id with the actual FAQ ID"
+          }
+        },
+        {
+          "name": "Get All FAQs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/faq/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "faq", "all"]
+            }
+          }
+        },
+        {
+          "name": "Delete FAQ",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/public/faq/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "public", "faq", ":id"]
+            },
+            "description": "Replace :id with the actual FAQ ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Support",
+      "item": [
+        {
+          "name": "List Support Tickets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Support Ticket",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", ":id"]
+            },
+            "description": "Replace :id with the actual support ticket ID"
+          }
+        },
+        {
+          "name": "Create Support Ticket",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"subject\":\"Need help with freight calculation\",\"message\":\"My calculation report is not saving correctly.\",\"contentType\":\"comment\",\"reason\":\"other\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", ""]
+            }
+          }
+        },
+        {
+          "name": "Update Support Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"IN_PROGRESS\",\"message\":\"Update: our team is reviewing your ticket.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", ":id"]
+            },
+            "description": "Replace :id with the actual support ticket ID"
+          }
+        },
+        {
+          "name": "Delete Support Ticket",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/support/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "support", ":id"]
+            },
+            "description": "Replace :id with the actual support ticket ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Upload",
+      "item": [
+        {
+          "name": "Generate Presigned URL",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"filename\":\"test-video.mp4\",\"contentType\":\"video/mp4\",\"folder\":\"videos\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/upload/presign",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "upload", "presign"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Message",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "multipart/form-data"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "chatId", "value": "<chatId>", "type": "text"},
+                {"key": "message", "value": "Hello from Postman", "type": "text"}
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/message/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "message", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Messages by Chat ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/message/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "message", ":id"]
+            },
+            "description": "Replace :id with the chat ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Create Chat",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", ":id"]
+            },
+            "description": "Replace :id with the other participant user ID"
+          }
+        },
+        {
+          "name": "List Chats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/chat/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "chat", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Review",
+      "item": [
+        {
+          "name": "List Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/review/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "review", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"reviewee\":\"<userId>\",\"rating\":5,\"review\":\"Excellent service.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/review/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "review", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Review by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/review/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "review", ":id"]
+            },
+            "description": "Replace :id with the actual review ID"
+          }
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"rating\":4,\"review\":\"Updated review text.\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/review/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "review", ":id"]
+            },
+            "description": "Replace :id with the actual review ID"
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/review/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "review", ":id"]
+            },
+            "description": "Replace :id with the actual review ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calculations",
+      "item": [
+        {
+          "name": "Create Calculation",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"type\":\"LOAD\",\"loadData\":{\"baseRate\":1200,\"fuelSurcharge\":300,\"loadedMiles\":750,\"tolls\":50,\"dhMiles\":100,\"dhRate\":0.5,\"bonus\":150,\"driverPercentage\":30,\"totalRevenue\":1800,\"totalProfit\":700,\"totalFSC\":300,\"totalDH\":50,\"totalMiles\":850,\"compensationPerMile\":1.4,\"costPerMile\":1.1,\"totalCost\":850,\"profitPerMile\":0.82,\"driverPay\":540,\"ownerPay\":610}}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/calculations/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "calculations", ""]
+            }
+          }
+        },
+        {
+          "name": "List Calculations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/calculations/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "calculations", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Calculation Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/calculations/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "calculations", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Export Calculation Data",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/calculations/export",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "calculations", "export"]
+            }
+          }
+        },
+        {
+          "name": "Get Calculation by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/calculations/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "calculations", ":id"]
+            },
+            "description": "Replace :id with the actual calculation ID"
+          }
+        },
+        {
+          "name": "Delete Calculation",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/calculations/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "calculations", ":id"]
+            },
+            "description": "Replace :id with the actual calculation ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscription",
+      "item": [
+        {
+          "name": "List Plans",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/plans?userType=user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "plans"],
+              "query": [{"key": "userType", "value": "user"}]
+            }
+          }
+        },
+        {
+          "name": "Get Plan by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/plans/:planId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "plans", ":planId"]
+            },
+            "description": "Replace :planId with the actual plan ID"
+          }
+        },
+        {
+          "name": "Check Trial Eligibility",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/trial-eligibility/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "trial-eligibility", ":userId"]
+            },
+            "description": "Replace :userId with the actual user ID or omit for current user"
+          }
+        },
+        {
+          "name": "Create Subscription",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"planId\":\"<planId>\",\"paymentMethodId\":\"pm_card_visa\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "create"]
+            }
+          }
+        },
+        {
+          "name": "Get My Subscription",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/my-subscription",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "my-subscription"]
+            }
+          }
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"cancelAtPeriodEnd\":false}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/:subscriptionId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", ":subscriptionId"]
+            },
+            "description": "Replace :subscriptionId with the actual subscription ID"
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/:subscriptionId/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", ":subscriptionId", "cancel"]
+            },
+            "description": "Replace :subscriptionId with the actual subscription ID"
+          }
+        },
+        {
+          "name": "Get Subscription Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "status"]
+            }
+          }
+        },
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"planId\":\"<planId>\",\"successUrl\":\"https://example.com/success\",\"cancelUrl\":\"https://example.com/cancel\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/checkout-session",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "checkout-session"]
+            }
+          }
+        },
+        {
+          "name": "Reactivate Subscription",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{}"},
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/:subscriptionId/reactivate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", ":subscriptionId", "reactivate"]
+            },
+            "description": "Replace :subscriptionId with the actual subscription ID"
+          }
+        },
+        {
+          "name": "Pause Subscription",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{}"},
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/:subscriptionId/pause",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", ":subscriptionId", "pause"]
+            },
+            "description": "Replace :subscriptionId with the actual subscription ID"
+          }
+        },
+        {
+          "name": "Resume Subscription",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{}"},
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/:subscriptionId/resume",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", ":subscriptionId", "resume"]
+            },
+            "description": "Replace :subscriptionId with the actual subscription ID"
+          }
+        },
+        {
+          "name": "Usage Data",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/usage",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "usage"]
+            }
+          }
+        },
+        {
+          "name": "Usage Warnings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/usage/warnings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "usage", "warnings"]
+            }
+          }
+        },
+        {
+          "name": "Billing Portal",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"returnUrl\":\"https://example.com/account\"}"},
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/billing-portal",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "billing-portal"]
+            }
+          }
+        },
+        {
+          "name": "Create Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Premium Plan\",\"description\":\"Full access membership\",\"price\":99,\"currency\":\"usd\",\"interval\":\"month\",\"intervalCount\":1,\"trialPeriodDays\":10,\"features\":[\"Unlimited calculations\",\"Priority support\"],\"maxTeamMembers\":5,\"maxServices\":20,\"userTypes\":[\"user\"],\"priority\":1}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/admin/plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "admin", "plans"]
+            }
+          }
+        },
+        {
+          "name": "Update Subscription Plan",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"description\":\"Updated plan description\",\"priority\":2}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/admin/plans/:planId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "admin", "plans", ":planId"]
+            },
+            "description": "Replace :planId with the actual plan ID"
+          }
+        },
+        {
+          "name": "List Admin Plans",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/admin/plans?userType=admin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "admin", "plans"],
+              "query": [{"key": "userType", "value": "admin"}]
+            }
+          }
+        },
+        {
+          "name": "List All Subscriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/admin/all-subscriptions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "admin", "all-subscriptions"]
+            }
+          }
+        },
+        {
+          "name": "Subscription Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/admin/analytics?status=active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "admin", "analytics"],
+              "query": [{"key": "status", "value": "active"}]
+            }
+          }
+        },
+        {
+          "name": "Retry Failed Payment",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{}"},
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/admin/:subscriptionId/retry-payment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subscription", "admin", ":subscriptionId", "retry-payment"]
+            },
+            "description": "Replace :subscriptionId with the actual subscription ID"
+          }
+        }
+      ]
+    }
+  ]
+}
