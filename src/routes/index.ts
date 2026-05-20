@@ -10,6 +10,7 @@ import { ReviewRoutes } from '../app/modules/review/review.route'
 import { CalculationRoutes } from '../app/modules/calculation/calculation.route'
 import { AdminRoutes } from '../app/modules/admin/admin.route'
 import { SubscriptionRoutes } from '../app/modules/subscription/subscription.route'
+import { IapRoutes } from '../app/modules/iap/iap.route'
 import { StatusCodes } from 'http-status-codes'
 
 const router = express.Router()
@@ -27,6 +28,7 @@ const apiRoutes: { path: string; route: Router }[] = [
   { path: '/calculations', route: CalculationRoutes },
   { path: '/admin', route: AdminRoutes },
   { path: '/subscription', route: SubscriptionRoutes },
+  { path: '/iap', route: IapRoutes },
 ]
 
 apiRoutes.forEach(route => {
