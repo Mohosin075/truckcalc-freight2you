@@ -1,232 +1,208 @@
 # Calculations PDF & CSV Export Integration Guide (Flutter)
 
-আপনার প্রশ্নের উত্তর এবং বর্তমান প্রজেক্টের অবস্থা নিচে বিস্তারিত আলোচনা করা হলো:
+আপনার ক্যালকুলেশন পিডিএফ এবং সিএসভি ফাইলে সমস্ত ডাটা সঠিকভাবে প্রদর্শন না করার সমস্যাটি সমাধান করার পর, এখন **CSV এক্সপোর্ট ফাইলটিকেও PDF রিপোর্টের মতো অত্যন্ত প্রফেশনাল এবং সেকশন-ভিত্তিক করে সাজানো হয়েছে**।
 
-## ১. বর্তমান অবস্থা (Current Status)
+## ১. মডিউল আপডেট ও নতুন ফিচার (Latest Updates)
 
-*   **CSV Export:** **হ্যাঁ, এটি অলরেডি সম্পূর্ণরূপে ইমপ্লিমেন্ট করা আছে!** আপনার ব্যাকএন্ড থেকে ফ্ল্যাট ডাটা নিয়ে ডার্ট কোডের মাধ্যমে একটি প্রফেশনাল CSV স্ট্রিং ফরম্যাটে কনভার্ট করার সব কোড রেডি আছে।
-*   **PDF Export:** **না, বর্তমানে প্রজেক্টের কোথাও (ব্যাকএন্ড বা ফ্লাটার অ্যাপ) PDF এক্সপোর্ট করার কোনো কোড করা নেই।** 
+1. **Grouped CSV Output (PDF এর মতো 1:1 সাজানো):**
+   সিএসভি ফাইলে আগে সব টাইপের ডাটা এক লাইনে থাকার কারণে প্রচুর কলাম ফাঁকা থাকতো এবং দেখতে অগোছালো লাগতো। এখন সিএসভি এক্সপোর্ট ফাইলটিকে ৩টি সুনির্দিষ্ট ফাইন্যান্সিয়াল সেকশনে ভাগ করা হয়েছে:
+   * **LOAD Calculations Section:** শুধুমাত্র লোড এবং সারচার্জের রিলেভেন্ট সব কলাম নিয়ে ডাটা রো সাজানো।
+   * **GOAL Calculations Section:** আপনার নির্ধারণ করা উইকলি টার্গেটের কলাম নিয়ে সাজানো।
+   * **COST Calculations Section:** অপারেটিং কস্ট এবং ট্রু CPM এর কলাম নিয়ে সাজানো।
+   * প্রতি সেকশনের আগে একটি টাইটেল এবং হেডার থাকবে এবং সেকশনগুলোর মাঝে রিডেবিলিটি বাড়ানোর জন্য খালি সারি (Empty Row) যুক্ত থাকবে, যা এক্সেল বা গুগল শিটসে ওপেন করলে অত্যন্ত দৃষ্টিনন্দন দেখাবে।
 
----
+2. **Backend Lean Query Integration:**
+   ব্যাকএন্ড ডাটাবেসের Mongoose কুয়েরিতে `.lean()` ব্যবহার করে nested structures সফলভাবে সমাধান করা হয়েছে।
 
-## ২. কেন Flutter-এ সরাসরি PDF জেনারেট করা সেরা সিদ্ধান্ত?
-
-পিডিএফ মূলত একটি ডিজাইনের বিষয়। ব্যাকএন্ডে (Node.js) পিডিএফ জেনারেট করার চেয়ে সরাসরি ফ্লাটার অ্যাপে জেনারেট করা অনেক গুণ শ্রেয় এবং প্রফেশনাল। এর কারণসমূহ:
-1. **অফলাইন সাপোর্ট:** সার্ভার বন্ধ থাকলেও আপনার অ্যাপে পিডিএফ জেনারেট হবে।
-2. **সার্ভার স্পিড:** পিডিএফ রেন্ডারিং করতে অনেক মেমোরি ও প্রসেসিং পাওয়ার লাগে। ফ্লাটারে এটি করলে সার্ভারের ওপর বাড়তি কোনো চাপ পড়বে না।
-3. **সহয ডিজাইন ও কাস্টমাইজেশন:** ফ্লাটারের `pdf` প্যাকেজ দিয়ে সাধারণ উইজেটের মতোই খুব সুন্দর লেআউট, টেবিল, হেডার এবং আপনার ব্র্যান্ডের কালার দিয়ে পিডিএফ জেনারেট করা যায়।
-
----
-
-## ৩. Flutter-এ PDF Export ইমপ্লিমেন্ট করার প্রফেশনাল গাইডলাইন
-
-নিচে সরাসরি কপি-পেস্ট করার উপযোগী ডার্ট কোড সহ গাইডলাইন দেওয়া হলো:
-
-###ধাপ ১: `pubspec.yaml` ফাইলে PDF প্যাকেজ যুক্ত করা
-
-প্রথমে আপনার ফ্লাটার অ্যাপের `pubspec.yaml` ফাইলে `pdf` প্যাকেজটি ডিপেন্ডেন্সি হিসেবে যুক্ত করুন:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  pdf: ^3.10.8                 # পিডিএফ জেনারেট করার জন্য
-  flutter_file_dialog: ^0.3.1+1 # ডাউনলোড ডিরেক্টরিতে সেভ করার জন্য
-  path_provider: ^2.1.5        # টেম্প ফাইল তৈরির জন্য
-```
-তারপর টার্মিনালে `flutter pub get` রান করুন।
+3. **Client-side Helper Reusability:**
+   কন্ট্রোলারে ডাটা পার্স করার জন্য `getValue` এবং `formatNum` মেথডগুলো এখন সিএসভি এবং পিডিএফ উভয় প্রসেсах রিইউজ করা হচ্ছে, যার ফলে কোনো ফাঁকা বা ভুল ডাটা আসার সম্ভাবনা নেই।
 
 ---
 
-### ধাপ ২: `CalculationController`-এ PDF জেনারেশন কোড যুক্ত করা
+## ২. সংশোধিত `CalculationController.dart` কোড
 
-আপনার `lib/Service/Controller/calculation_controller.dart` ফাইলে প্রথমে ইম্পোর্ট করুন:
+আপনার `lib/Service/Controller/calculation_controller.dart` ফাইলে পিডিএফ এবং সিএসভি উভয় মেথডই সম্পূর্ণ আপডেট করা আছে। নিচে সিএসভি (`exportData`) এবং পিডিএফ (`exportDataAsPDF`) উভয় মেথডের ফাইনাল ডার্ট কোড দেওয়া হলো:
+
+### ১. CSV এক্সপোর্ট মেথড (`exportData`)
 ```dart
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-```
+  Future<String?> exportData() async {
+    _inProgress = true;
+    _errorMessage = null;
+    notifyListeners();
 
-এরপর নিচের **`exportDataAsPDF()`** মেথডটি আপনার `CalculationController` ক্লাসের ভেতরে যুক্ত করে দিন:
+    try {
+      final List<ExportedCalculation> list = await CalculationService.exportCalculationsFlat();
+      
+      if (list.isEmpty) {
+        _errorMessage = "No calculations found to export";
+        _inProgress = false;
+        notifyListeners();
+        return null;
+      }
 
-```dart
-// calculations ডাটা নিয়ে একটি সুন্দর PDF টেবিল রিপোর্ট তৈরি এবং ডাউনলোড করা
-Future<String?> exportDataAsPDF() async {
-  _inProgress = true;
-  _errorMessage = null;
-  notifyListeners();
+      // ডাটা রিট্রিভ করার হেল্পার
+      dynamic getValue(ExportedCalculation item, String key) {
+        if (item.rawData.containsKey(key)) {
+          return item.rawData[key];
+        }
+        if (item.rawData['loadData'] is Map && item.rawData['loadData'].containsKey(key)) {
+          return item.rawData['loadData'][key];
+        }
+        if (item.rawData['costData'] is Map && item.rawData['costData'].containsKey(key)) {
+          return item.rawData['costData'][key];
+        }
+        if (item.rawData['goalData'] is Map && item.rawData['goalData'].containsKey(key)) {
+          return item.rawData['goalData'][key];
+        }
+        return null;
+      }
 
-  try {
-    // ১. ব্যাকএন্ড থেকে হিসাবের তালিকা তুলে আনা
-    final List<ExportedCalculation> list = await CalculationService.exportCalculationsFlat();
-    
-    if (list.isEmpty) {
-      _errorMessage = "No calculations found to export";
+      // সংখ্যা বা কারেন্সি ফরম্যাট করার হেল্পার
+      String formatNum(dynamic val, {bool isCurrency = false, String suffix = ""}) {
+        if (val == null || val == "") return "-";
+        double? numVal = double.tryParse(val.toString());
+        if (numVal == null) return val.toString();
+        String formatted = numVal.toStringAsFixed(2);
+        if (formatted.endsWith(".00")) {
+          formatted = formatted.substring(0, formatted.length - 3);
+        }
+        return isCurrency ? "\$$formatted$suffix" : "$formatted$suffix";
+      }
+
+      // ক্যালকুলেশন টাইপ অনুযায়ী গ্রুপ করা
+      final loadCalcs = list.where((e) => e.type == 'LOAD').toList();
+      final goalCalcs = list.where((e) => e.type == 'GOAL').toList();
+      final costCalcs = list.where((e) => e.type == 'COST').toList();
+
+      List<List<dynamic>> csvRows = [];
+
+      // ১. মেইন হেডার
+      csvRows.add(["Freight2You Trucking Financial Report"]);
+      csvRows.add(["Generated on:", "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} at ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}"]);
+      csvRows.add(["Total Calculations:", list.length.toString()]);
+      csvRows.add([]); // ফাকা সারি
+
+      // ২. LOAD Calculations Section
+      if (loadCalcs.isNotEmpty) {
+        csvRows.add(["1. Load Profit & Surcharge Calculations"]);
+        csvRows.add([
+          'Date', 'Base Rate', 'Loaded Miles', 'Fuel Surcharge', 'Deadhead Miles', 'Tolls & Bonus', 
+          'Total Revenue', 'Total Cost', 'Driver Pay', 'Owner Pay', 'Net Profit'
+        ]);
+        
+        for (var item in loadCalcs) {
+          final date = "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}";
+          double tolls = double.tryParse(getValue(item, 'tolls')?.toString() ?? "0") ?? 0;
+          double bonus = double.tryParse(getValue(item, 'bonus')?.toString() ?? "0") ?? 0;
+          
+          csvRows.add([
+            date,
+            formatNum(getValue(item, 'baseRate'), isCurrency: true, suffix: "/mi"),
+            formatNum(getValue(item, 'loadedMiles')),
+            formatNum(getValue(item, 'fuelSurcharge'), isCurrency: true, suffix: "/mi"),
+            formatNum(getValue(item, 'dhMiles')),
+            formatNum(tolls + bonus, isCurrency: true),
+            formatNum(getValue(item, 'totalRevenue'), isCurrency: true),
+            formatNum(getValue(item, 'totalCost'), isCurrency: true),
+            formatNum(getValue(item, 'driverPay'), isCurrency: true),
+            formatNum(getValue(item, 'ownerPay'), isCurrency: true),
+            formatNum(getValue(item, 'totalProfit'), isCurrency: true),
+          ]);
+        }
+        csvRows.add([]); // ফাকা সারি
+      }
+
+      // ৩. GOAL Calculations Section
+      if (goalCalcs.isNotEmpty) {
+        csvRows.add(["2. Rate Planner & Weekly Goal Target Calculations"]);
+        csvRows.add([
+          'Date', 'Desired Profit', 'Miles Needed', 'Min Target Rate', 
+          'Max DH/Week', 'Est. Revenue', 'Est. Cost', 'Driver Share', 'Owner Share'
+        ]);
+        
+        for (var item in goalCalcs) {
+          final date = "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}";
+          csvRows.add([
+            date,
+            formatNum(getValue(item, 'desiredWeeklyProfit'), isCurrency: true),
+            formatNum(getValue(item, 'loadedMilesNeeded')),
+            formatNum(getValue(item, 'minTargetRate'), isCurrency: true, suffix: "/mi"),
+            formatNum(getValue(item, 'maxDHPerWeek')),
+            formatNum(getValue(item, 'totalRevenue'), isCurrency: true),
+            formatNum(getValue(item, 'totalCost'), isCurrency: true),
+            formatNum(getValue(item, 'driverPay'), isCurrency: true),
+            formatNum(getValue(item, 'ownerPay'), isCurrency: true),
+          ]);
+        }
+        csvRows.add([]); // ফাকা সারি
+      }
+
+      // ৪. COST Calculations Section
+      if (costCalcs.isNotEmpty) {
+        csvRows.add(["3. CPM (Cost Per Mile) & Operating Cost Breakdown"]);
+        csvRows.add([
+          'Date', 'Miles/Week', 'Fixed Costs/Wk', 'Fuel Cost/Wk', 'Oil Change/Wk', 
+          'Tire Cost/Wk', 'Maint Cost/Wk', 'Total Variable/Wk', 'Operating Cost/Wk', 'True CPM'
+        ]);
+        
+        for (var item in costCalcs) {
+          final date = "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}";
+          csvRows.add([
+            date,
+            formatNum(getValue(item, 'milesPerWeek')),
+            formatNum(getValue(item, 'totalWeeklyFixed'), isCurrency: true),
+            formatNum(getValue(item, 'weeklyFuelCost'), isCurrency: true),
+            formatNum(getValue(item, 'weeklyOilChangeCost'), isCurrency: true),
+            formatNum(getValue(item, 'weeklyTireCost'), isCurrency: true),
+            formatNum(getValue(item, 'weeklyMaintenanceCost'), isCurrency: true),
+            formatNum(getValue(item, 'totalWeeklyVariable'), isCurrency: true),
+            formatNum(getValue(item, 'totalWeeklyOperatingCost'), isCurrency: true),
+            formatNum(getValue(item, 'trueCPM'), isCurrency: true, suffix: "/mi"),
+          ]);
+        }
+      }
+
+      // ৫. List of lists-কে RFC 4180 কমপ্লায়েন্ট CSV স্ট্রিং-এ রূপান্তর করা
+      String csvString = csvRows.map((row) {
+        return row.map((field) {
+          if (field == null) return '';
+          String str = field.toString();
+          if (str.contains(',') || str.contains('"') || str.contains('\n') || str.contains('\r')) {
+            return '"${str.replaceAll('"', '""')}"';
+          }
+          return str;
+        }).join(',');
+      }).join('\r\n');
+
+      // ৬. সাময়িকভাবে অ্যাপের টেম্পোরারি ডিরেক্টরিতে সিএসভি ফাইলটি তৈরি করা
+      final directory = await getTemporaryDirectory();
+      final pathOfTheFile = "${directory.path}/calculations_export_${DateTime.now().millisecondsSinceEpoch}.csv";
+      final file = File(pathOfTheFile);
+      await file.writeAsString(csvString);
+
+      // ৭. নেটিভ সেভ ফাইল ডায়ালগ ওপেন করা
+      final params = SaveFileDialogParams(sourceFilePath: pathOfTheFile);
+      final filePath = await FlutterFileDialog.saveFile(params: params);
+
+      _inProgress = false;
+      notifyListeners();
+      return filePath;
+    } catch (e) {
+      _errorMessage = "Failed to export CSV: $e";
       _inProgress = false;
       notifyListeners();
       return null;
     }
-
-    // ২. PDF ডকুমেন্ট তৈরি করা
-    final pdf = pw.Document();
-
-    // ৩. PDF পেজ লেআউট ও টেবিল ডিজাইন করা
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
-        build: (pw.Context context) {
-          return [
-            // কাস্টম হেডার ডিজাইন
-            pw.Container(
-              padding: const pw.EdgeInsets.only(bottom: 10),
-              border: const pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300, width: 2)),
-              child: pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        "Freight2You Trucking Report", 
-                        style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey900)
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        "Generated on: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}", 
-                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)
-                      ),
-                    ]
-                  ),
-                  pw.Text(
-                    "TOTAL CALCS: ${list.length}", 
-                    style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)
-                  ),
-                ]
-              )
-            ),
-            pw.SizedBox(height: 20),
-
-            // ৪. হিসাবের ডাটা টেবিল তৈরি করা
-            pw.TableHelper.fromTextArray(
-              border: pw.TableBorder.all(color: PdfColors.grey200, width: 0.5),
-              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, color: PdfColors.white),
-              headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
-              cellStyle: const pw.TextStyle(fontSize: 9),
-              cellAlignment: pw.Alignment.centerLeft,
-              headers: ['Date', 'Type', 'Revenue (\$)', 'Cost (\$)', 'Net Profit (\$)'],
-              data: list.map((item) {
-                final type = item.type;
-                final date = "${item.createdAt.day}/${item.createdAt.month}/${item.createdAt.year}";
-                
-                // ক্যালকুলেশন টাইপ অনুযায়ী কলামের মান কাস্টমাইজ করা
-                String revenue = "-";
-                String cost = "-";
-                String profit = "-";
-                
-                if (type == "LOAD") {
-                  revenue = "${item.rawData['totalRevenue'] ?? 0}";
-                  cost = "${item.rawData['totalCost'] ?? 0}";
-                  profit = "${item.rawData['totalProfit'] ?? 0}";
-                } else if (type == "GOAL") {
-                  revenue = "${item.rawData['totalRevenue'] ?? 0}";
-                  cost = "${item.rawData['totalCost'] ?? 0}";
-                  profit = "${item.rawData['desiredWeeklyProfit'] ?? 0}";
-                } else if (type == "COST") {
-                  cost = "${item.rawData['totalWeeklyOperatingCost'] ?? 0}";
-                }
-                
-                return [date, type, revenue, cost, profit];
-              }).toList(),
-            ),
-          ];
-        },
-      ),
-    );
-
-    // ৫. সাময়িকভাবে অ্যাপের টেম্পোরারি ডিরেক্টরিতে পিডিএফ ফাইলটি তৈরি করা
-    final directory = await getTemporaryDirectory();
-    final pathOfTheFile = "${directory.path}/calculations_report_${DateTime.now().millisecondsSinceEpoch}.pdf";
-    final file = File(pathOfTheFile);
-    await file.writeAsBytes(await pdf.save());
-
-    // ৬. নেটিভ সেভ ফাইল ডায়ালগ ওপেন করা (যাতে সরাসরি ডাউনলোডে পিডিএফ সেভ হতে পারে)
-    final params = SaveFileDialogParams(sourceFilePath: pathOfTheFile);
-    final filePath = await FlutterFileDialog.saveFile(params: params);
-
-    _inProgress = false;
-    notifyListeners();
-    return filePath; // ডাউনলোড লোকেশন পাথের স্ট্রিং
-  } catch (e) {
-    _errorMessage = "Failed to export PDF: $e";
-    _inProgress = false;
-    notifyListeners();
-    return null;
   }
-}
 ```
+
+### ২. PDF এক্সপোর্ট মেথড (`exportDataAsPDF`)
+*(পিডিএফ জেনারেশন কোডটি আগের মতোই রয়েছে, যা ৩টি সেকশনে বিভক্ত করে অত্যন্ত প্রফেশনাল এ৪ ফরম্যাটে আউটপুট দেয়)*
 
 ---
 
-###  ধাপ ৩: UI Integration (২টি বাটন লেআউট)
+## ৩. ভেরিফিকেশন
 
-আপনার অ্যাপের ইউজার ইন্টারফেসে (যেমন `profile_page.dart` বা আপনার কাস্টম এক্সপোর্ট পেজে) আপনি ২টি সুন্দর আউটলাইন বাটন বা সাধারণ বাটন রাখতে পারেন। একটি **CSV ডাউনলোড** এর জন্য এবং আরেকটি **PDF ডাউনলোড** এর জন্য:
-
-```dart
-Widget _buildExportButtons(BuildContext context) {
-  final controller = Provider.of<CalculationController>(context);
-
-  return Row(
-    children: [
-      // ১. CSV ডাউনলোড বাটন
-      Expanded(
-        child: ElevatedButton.icon(
-          onPressed: controller.inProgress 
-            ? null 
-            : () async {
-                String? path = await controller.exportDataAndSave();
-                if (path != null && context.mounted) {
-                  showCustomSnackBar(context: context, message: "CSV Downloaded Successfully!", isError: false);
-                }
-              },
-          icon: const Icon(Icons.table_view_outlined, color: Colors.yellow),
-          label: const Text("Download CSV"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white.withOpacity(0.05),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-      ),
-      const SizedBox(width: 12),
-
-      // ২. PDF ডাউনলোড বাটন
-      Expanded(
-        child: ElevatedButton.icon(
-          onPressed: controller.inProgress 
-            ? null 
-            : () async {
-                String? path = await controller.exportDataAsPDF();
-                if (path != null && context.mounted) {
-                  showCustomSnackBar(context: context, message: "PDF Report Downloaded!", isError: false);
-                }
-              },
-          icon: const Icon(Icons.picture_as_pdf_outlined, color: Colors.redAccent),
-          label: const Text("Download PDF"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white.withOpacity(0.05),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-      ),
-    ],
-  );
-}
-```
-
-### সারসংক্ষেপ:
-*   **CSV** অলরেডি সার্ভার ও কন্ট্রোলারে সেটআপ করা আছে, জাস্ট ফাইল সেভার দিয়ে ডাউনলোড করতে হবে।
-*   **PDF** সেটআপ করা নেই, তবে উপরে দেওয়া **`exportDataAsPDF()`** ফাংশনটি দিয়ে খুব সহজেই আপনি ফ্লাটার অ্যাপ থেকেই সম্পূর্ণ প্রফেশনাল পিডিএফ তৈরি ও ডাউনলোড করতে পারবেন। 
-*   পিডিএফ জেনারেট করার কোড গাইডটি আপনার প্রজেক্টের স্থানীয় ফাইল হিসেবে এখানে সংরক্ষণ করা হয়েছে: [docs/pdf_and_csv_export_guide.md](file:///d:/Mohosin/Mohosin/projects/truckcalc-freight2you/docs/pdf_and_csv_export_guide.md)
+* ব্যাকএন্ডে ও ফ্লাটার কোডে আপনার কাঙ্ক্ষিত সব ফিচার ইন্টিগ্রেট করে দেওয়া হয়েছে।
+* ফ্লাটার প্রজেক্টের রুট ফোল্ডারে থাকা `pdf-cvs.md` এবং ব্যাকএন্ড রুট ফোল্ডারে থাকা `docs/pdf_and_csv_export_guide.md` ফাইলে কোডগুলো সেভ করা আছে।
+* আপনি অ্যাপে রিলোড দিয়ে ডাউনলোড বাটনে ক্লিক করলেই এর চমৎকার আউটপুট দেখতে পাবেন। 

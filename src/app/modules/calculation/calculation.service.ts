@@ -165,10 +165,10 @@ const getStatsFromDB = async (userId: Types.ObjectId) => {
 };
 
 const getExportDataFromDB = async (userId: Types.ObjectId) => {
-  const calculations = await Calculation.find({ user: userId }).sort({ createdAt: -1 });
+  const calculations = await Calculation.find({ user: userId }).sort({ createdAt: -1 }).lean();
   
   // Flatten data for CSV
-  const flattened = calculations.map((calc) => {
+  const flattened = calculations.map((calc: any) => {
     const base = {
       id: calc._id,
       type: calc.type,
