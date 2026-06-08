@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const loadDataValidationSchema = z.object({
+  loadNumber: z.string().optional(),
   baseRate: z.number(),
   fuelSurcharge: z.number(),
   loadedMiles: z.number(),

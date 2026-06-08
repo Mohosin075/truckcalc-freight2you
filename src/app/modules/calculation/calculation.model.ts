@@ -2,6 +2,7 @@ import { Schema, model } from 'mongoose';
 import { ICalculation } from './calculation.interface';
 
 const loadDataSchema = new Schema({
+  loadNumber: { type: String, required: false },
   baseRate: { type: Number, required: true },
   fuelSurcharge: { type: Number, required: true },
   loadedMiles: { type: Number, required: true },

@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 export type ICalculationType = 'LOAD' | 'GOAL' | 'COST';
 
 export type ILoadCalculation = {
+  loadNumber?: string;
   baseRate: number;
   fuelSurcharge: number;
   loadedMiles: number;
