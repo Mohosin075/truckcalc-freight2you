@@ -44,25 +44,22 @@ const createCalculationIntoDB = async (
   if (payload.type === 'GOAL' && payload.goalData) {
     const data = payload.goalData
 
-    // SUGGESTED MAX DEADHEAD PER DAY = B7*0.15
+    // SUGGESTED MAX DEADHEAD PER DAY = B6*0.15
     data.maxDHPerDay = data.maxMilesPerDay * 0.15 // E7
     // SUGGESTED MAX DEADHEAD PER WEEK = E7*B5
     data.maxDHPerWeek = data.maxDHPerDay * data.daysPerWeek // E8
 
     // E2: LOADED MILES NEEDED PER WEEK
-    if (!data.loadedMilesNeeded || data.loadedMilesNeeded === 0) {
-      const totalMiles = data.daysPerWeek * data.maxMilesPerDay
-      data.loadedMilesNeeded = totalMiles - data.maxDHPerWeek
-    }
+    data.loadedMilesNeeded = data.daysPerWeek * data.maxMilesPerDay
 
     if (data.loadedMilesNeeded > 0) {
       // MINIMUM TARGET RATE PER MILE NEEDED = B3+(B2/E2)
       data.minTargetRate =
         data.costPerMile + data.desiredWeeklyProfit / data.loadedMilesNeeded // E4
-      // Total Revenue = E2*E4 + E8*B4/E2
+      // Total Revenue = E2*E4 + E8*B4
       data.totalRevenue =
         data.loadedMilesNeeded * data.minTargetRate +
-        (data.maxDHPerWeek * data.deadheadPayPerMile) / data.loadedMilesNeeded
+        data.maxDHPerWeek * data.deadheadPayPerMile
       // Total Cost = B3 * E2
       data.totalCost = data.costPerMile * data.loadedMilesNeeded
     } else {
