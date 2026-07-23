@@ -5,11 +5,41 @@ import { Calculation } from './calculation.model'
 
 import { Subscription } from '../subscription/subscription.model'
 import dayjs from 'dayjs'
+import ApiError from '../../../errors/ApiError'
+import { StatusCodes } from 'http-status-codes'
 
 const createCalculationIntoDB = async (
   userId: Types.ObjectId,
   payload: ICalculation,
 ) => {
+  // Check user's current subscription status
+  const subscription = await Subscription.findOne({
+    userId,
+    status: { $in: ['active', 'trialing'] },
+  }).populate('planId')
+
+  const isPremium = subscription && (
+    (subscription.planId as any)?.name === 'Pro' || 
+    (subscription.planId as any)?.name === 'Annual'
+  )
+
+  if (!isPremium) {
+    const startOfToday = dayjs().startOf('day').toDate()
+    const endOfToday = dayjs().endOf('day').toDate()
+
+    const todayCount = await Calculation.countDocuments({
+      user: userId,
+      createdAt: { $gte: startOfToday, $lte: endOfToday },
+    })
+
+    if (todayCount >= 10) {
+      throw new ApiError(
+        StatusCodes.FORBIDDEN,
+        'Daily calculation limit reached. Please upgrade to Pro.',
+      )
+    }
+  }
+
   payload.user = userId
 
   // Apply Load Calculator formulas if type is LOAD
@@ -130,14 +160,46 @@ const getCalculationsFromDB = async (
   userId: Types.ObjectId,
   query: Record<string, unknown>,
 ) => {
-  const calculationQuery = new QueryBuilder(
-    Calculation.find({ user: userId }),
-    query,
+  // Check user's current subscription status
+  const subscription = await Subscription.findOne({
+    userId,
+    status: { $in: ['active', 'trialing'] },
+  }).populate('planId')
+
+  const isPremium = subscription && (
+    (subscription.planId as any)?.name === 'Pro' || 
+    (subscription.planId as any)?.name === 'Annual'
   )
-    .filter()
-    .sort()
-    .paginate()
-    .fields()
+
+  let calculationQuery;
+  if (!isPremium) {
+    // Basic history: only show the latest 10 calculations
+    const latestCalculations = await Calculation.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('_id')
+      .lean()
+
+    const allowedIds = latestCalculations.map((c) => c._id)
+
+    calculationQuery = new QueryBuilder(
+      Calculation.find({ user: userId, _id: { $in: allowedIds } }),
+      query,
+    )
+      .filter()
+      .sort()
+      .paginate()
+      .fields()
+  } else {
+    calculationQuery = new QueryBuilder(
+      Calculation.find({ user: userId }),
+      query,
+    )
+      .filter()
+      .sort()
+      .paginate()
+      .fields()
+  }
 
   const result = await calculationQuery.modelQuery
   const meta = await calculationQuery.getPaginationInfo()
