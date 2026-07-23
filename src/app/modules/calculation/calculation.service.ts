@@ -44,28 +44,25 @@ const createCalculationIntoDB = async (
   if (payload.type === 'GOAL' && payload.goalData) {
     const data = payload.goalData
 
-    // SUGGESTED MAX DEADHEAD PER DAY = B6*0.15
-    data.maxDHPerDay = data.maxMilesPerDay * 0.15 // E7
+    // SUGGESTED MAX DEADHEAD PER DAY = B6*0.20
+    data.maxDHPerDay = data.maxMilesPerDay * 0.20 // E7
     // SUGGESTED MAX DEADHEAD PER WEEK = E7*B5
     data.maxDHPerWeek = data.maxDHPerDay * data.daysPerWeek // E8
 
     // E2: LOADED MILES NEEDED PER WEEK
     data.loadedMilesNeeded = data.daysPerWeek * data.maxMilesPerDay
 
-    if (data.loadedMilesNeeded > 0) {
-      // MINIMUM TARGET RATE PER MILE NEEDED = B3+(B2/E2)
-      data.minTargetRate =
-        data.costPerMile + data.desiredWeeklyProfit / data.loadedMilesNeeded // E4
-      // Total Revenue = E2*E4 + E8*B4
-      data.totalRevenue =
-        data.loadedMilesNeeded * data.minTargetRate +
-        data.maxDHPerWeek * data.deadheadPayPerMile
-      // Total Cost = B3 * E2
-      data.totalCost = data.costPerMile * data.loadedMilesNeeded
+    // Total Cost = (E2 + E8) * B3
+    data.totalCost = (data.loadedMilesNeeded + data.maxDHPerWeek) * data.costPerMile
+
+    // Total Revenue = B2 + E6
+    data.totalRevenue = data.desiredWeeklyProfit + data.totalCost
+
+    if ((data.loadedMilesNeeded + data.maxDHPerWeek) > 0) {
+      // MINIMUM TARGET RATE PER MILE NEEDED = E5 / (E2 + E8)
+      data.minTargetRate = data.totalRevenue / (data.loadedMilesNeeded + data.maxDHPerWeek)
     } else {
       data.minTargetRate = 0
-      data.totalRevenue = 0
-      data.totalCost = 0
     }
 
     const driverRatio = data.driverPercentage / 100
@@ -96,9 +93,12 @@ const createCalculationIntoDB = async (
       data.weeklyFuelCost = 0
     }
 
-    // Weekly Oil Change Cost = (Oil Changes Per Year * Cost Per Oil Change) / 52
-    data.weeklyOilChangeCost =
-      (data.oilChangesPerYear * data.costPerOilChange) / 52
+    // Weekly Oil Change Cost = (Miles Driven / MPG) * Fuel Price
+    if (data.avgMPG > 0) {
+      data.weeklyOilChangeCost = (data.milesPerWeek / data.avgMPG) * data.fuelPrice
+    } else {
+      data.weeklyOilChangeCost = 0
+    }
     // Weekly Tire Cost = Tire Cost Per Year / 52
     data.weeklyTireCost = data.tireCostPerYear / 52
     // Weekly Maintenance Cost = Maintenance Cost Per Year / 52
