@@ -123,12 +123,9 @@ const createCalculationIntoDB = async (
       data.weeklyFuelCost = 0
     }
 
-    // Weekly Oil Change Cost = (Miles Driven / MPG) * Fuel Price
-    if (data.avgMPG > 0) {
-      data.weeklyOilChangeCost = (data.milesPerWeek / data.avgMPG) * data.fuelPrice
-    } else {
-      data.weeklyOilChangeCost = 0
-    }
+    // Weekly Oil Change Cost = (Oil Changes Per Year * Cost Per Oil Change) / 52
+    data.weeklyOilChangeCost =
+      (data.oilChangesPerYear * data.costPerOilChange) / 52
     // Weekly Tire Cost = Tire Cost Per Year / 52
     data.weeklyTireCost = data.tireCostPerYear / 52
     // Weekly Maintenance Cost = Maintenance Cost Per Year / 52
