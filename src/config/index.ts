@@ -17,6 +17,7 @@ export default {
     'http://195.35.6.13:3001',
     'http://localhost:3000',
     'http://10.10.7.50:3000',
+    'http://10.10.26.208:3000',
   ],
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   firebase_service_account_base64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,

@@ -24,7 +24,7 @@ const defaultPlans = [
   {
     name: 'Pro',
     description: 'Full access for professional truckers',
-    price: 19.99,
+    price: 9.99,
     currency: 'usd',
     interval: 'month' as const,
     intervalCount: 1,
@@ -34,6 +34,7 @@ const defaultPlans = [
       'Full history',
       'PDF & CSV export',
       'Priority support',
+      'Save over 50% compared to monthly',
     ],
     maxTeamMembers: 1,
     maxServices: 999999,
@@ -43,7 +44,7 @@ const defaultPlans = [
   {
     name: 'Annual',
     description: 'Best value for long-term planning',
-    price: 119.99,
+    price: 79.99,
     currency: 'usd',
     interval: 'year' as const,
     intervalCount: 1,
@@ -69,7 +70,10 @@ export async function seedSubscriptionPlans(): Promise<void> {
     // Check if plans already exist
     const existingPlansCount = await SubscriptionPlan.countDocuments()
     if (existingPlansCount > 0) {
-      console.log(`${existingPlansCount} subscription plans already exist. Skipping seed.`)
+      console.log(`${existingPlansCount} subscription plans already exist. Updating prices in database...`)
+      await SubscriptionPlan.updateOne({ name: 'Pro' }, { $set: { price: 9.99 } })
+      await SubscriptionPlan.updateOne({ name: 'Annual' }, { $set: { price: 79.99 } })
+      console.log('Database subscription plan prices updated successfully.')
       return
     }
 

@@ -82,23 +82,23 @@ const createCalculationIntoDB = async (
     // E2: LOADED MILES NEEDED PER WEEK
     data.loadedMilesNeeded = data.daysPerWeek * data.maxMilesPerDay
 
-    // Total Cost = (E2 + E8) * B3
-    data.totalCost = (data.loadedMilesNeeded + data.maxDHPerWeek) * data.costPerMile
+    // Total Cost = E2 * B3
+    data.totalCost = data.loadedMilesNeeded * data.costPerMile
 
     // Total Revenue = B2 + E6
     data.totalRevenue = data.desiredWeeklyProfit + data.totalCost
 
-    if ((data.loadedMilesNeeded + data.maxDHPerWeek) > 0) {
-      // MINIMUM TARGET RATE PER MILE NEEDED = E5 / (E2 + E8)
-      data.minTargetRate = data.totalRevenue / (data.loadedMilesNeeded + data.maxDHPerWeek)
+    if (data.loadedMilesNeeded > 0) {
+      // MINIMUM TARGET RATE PER MILE NEEDED = E5 / E2
+      data.minTargetRate = data.totalRevenue / data.loadedMilesNeeded
     } else {
       data.minTargetRate = 0
     }
 
     const driverRatio = data.driverPercentage / 100
-    // Using desiredWeeklyProfit as the base for earnings split if it's the goal
-    data.driverPay = data.desiredWeeklyProfit * driverRatio
-    data.ownerPay = data.desiredWeeklyProfit * (1 - driverRatio)
+    // Split is based on totalRevenue
+    data.driverPay = data.totalRevenue * driverRatio
+    data.ownerPay = data.totalRevenue * (1 - driverRatio)
   }
 
   // Apply CPM Calculator formulas if type is COST
