@@ -96,10 +96,12 @@ const createCalculationIntoDB = async (
       data.minTargetRate = 0
     }
 
-    const driverRatio = data.driverPercentage / 100
-    // Split is based on totalRevenue
-    data.driverPay = data.totalRevenue * driverRatio
-    data.ownerPay = data.totalRevenue * (1 - driverRatio)
+    if (data.driverPercentage !== undefined && data.driverPercentage !== null) {
+      const driverRatio = data.driverPercentage / 100
+      // Split is based on totalRevenue
+      data.driverPay = data.totalRevenue * driverRatio
+      data.ownerPay = data.totalRevenue * (1 - driverRatio)
+    }
   }
 
   // Apply CPM Calculator formulas if type is COST
