@@ -104,6 +104,28 @@ const getProfile = catchAsync(async (req: Request, res: Response) => {
   })
 })
 
+const saveDraft = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as JwtPayload
+  const result = await UserServices.saveDraft(user.authId, req.body)
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Draft saved successfully',
+    data: result,
+  })
+})
+
+const getDraft = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as JwtPayload
+  const result = await UserServices.getDraft(user.authId)
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Draft retrieved successfully',
+    data: result,
+  })
+})
+
 export const UserController = {
   updateProfile,
   getAllUsers,
@@ -112,4 +134,6 @@ export const UserController = {
   updateUserStatus,
   getProfile,
   deleteProfile,
+  saveDraft,
+  getDraft,
 }

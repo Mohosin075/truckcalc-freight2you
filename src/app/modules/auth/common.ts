@@ -117,6 +117,7 @@ const handleLoginLogic = async (
     {
       $set: {
         deviceToken: payload.deviceToken,
+        deviceId: payload.deviceId || isUserExist.deviceId,
         'authentication.restrictionLeftAt': null,
         'authentication.wrongLoginAttempts': 0,
       },

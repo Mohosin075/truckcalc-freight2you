@@ -258,6 +258,35 @@ export const getProfile = async (user: JwtPayload) => {
   return isUserExist
 }
 
+const saveDraft = async (userId: string, draftData: any) => {
+  const user = await User.findById(userId)
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found.')
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        'draft.loadCalculator': draftData.loadCalculator || user.draft?.loadCalculator || {},
+        'draft.costsCalculator': draftData.costsCalculator || user.draft?.costsCalculator || {},
+        'draft.ratePlanner': draftData.ratePlanner || user.draft?.ratePlanner || {},
+      },
+    },
+    { new: true },
+  )
+
+  return updatedUser?.draft
+}
+
+const getDraft = async (userId: string) => {
+  const user = await User.findById(userId).select('draft')
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found.')
+  }
+  return user.draft || { loadCalculator: {}, costsCalculator: {}, ratePlanner: {} }
+}
+
 export const UserServices = {
   updateProfile,
   createAdmin,
@@ -267,4 +296,6 @@ export const UserServices = {
   updateUserStatus,
   getProfile,
   deleteProfile,
+  saveDraft,
+  getDraft,
 }

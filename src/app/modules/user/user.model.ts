@@ -84,6 +84,12 @@ const UserSchema = new Schema<IUser, UserModel>(
     subscriptionTier: { type: String, default: 'free' },
     trialUsed: { type: Boolean, default: false },
     subscriptionExpiresAt: { type: Date, default: null },
+    deviceId: { type: String, default: null },
+    draft: {
+      loadCalculator: { type: Map, of: Schema.Types.Mixed, default: {} },
+      costsCalculator: { type: Map, of: Schema.Types.Mixed, default: {} },
+      ratePlanner: { type: Map, of: Schema.Types.Mixed, default: {} },
+    },
   },
   {
     timestamps: true,
@@ -104,6 +110,16 @@ UserSchema.index({ location: '2dsphere' }) // Geo queries support
 
 // ------------------ PRE HOOKS ------------------
 UserSchema.pre('save', async function (next) {
+  if (this.isNew && this.deviceId) {
+    const hasDeviceUsedTrial = await (this.constructor as any).findOne({
+      deviceId: this.deviceId,
+      trialUsed: true,
+    })
+    if (hasDeviceUsedTrial) {
+      this.trialUsed = true
+    }
+  }
+
   if (!this.isModified('password')) return next()
   this.password = await bcrypt.hash(this.password, 10)
   next()

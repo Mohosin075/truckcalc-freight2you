@@ -56,18 +56,38 @@ class SubscriptionService {
   // Check trial eligibility
   async checkTrialEligibility(userId: string): Promise<TrialInfo> {
     try {
+      const user = await User.findById(userId)
+      if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
+      }
+
       const existingSubscription = await Subscription.findOne({
         userId: new Types.ObjectId(userId),
         hasUsedTrial: true,
       })
 
-      const isEligible = !existingSubscription
+      let isEligible = !existingSubscription && !user.trialUsed
+      let reason: string | undefined = undefined
+
+      if (!isEligible) {
+        reason = 'User has already used their free trial'
+      } else if (user.deviceId) {
+        const deviceUsedTrial = await User.findOne({
+          deviceId: user.deviceId,
+          _id: { $ne: new Types.ObjectId(userId) },
+          trialUsed: true,
+        })
+        if (deviceUsedTrial) {
+          isEligible = false
+          reason = 'This device has already used the free trial'
+        }
+      }
 
       return {
         isEligible,
-        hasUsedTrial: !!existingSubscription,
+        hasUsedTrial: !isEligible,
         trialDays: 10, // Default trial period
-        reason: isEligible ? undefined : 'User has already used their free trial',
+        reason,
       }
     } catch (error) {
       console.error('Error checking trial eligibility:', error)

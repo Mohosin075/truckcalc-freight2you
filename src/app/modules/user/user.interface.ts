@@ -77,6 +77,13 @@ export interface IUser {
   subscriptionTier?: string
   trialUsed?: boolean
   subscriptionExpiresAt?: Date
+
+  deviceId?: string
+  draft?: {
+    loadCalculator?: Record<string, any>
+    costsCalculator?: Record<string, any>
+    ratePlanner?: Record<string, any>
+  }
   
   createdAt: Date
   updatedAt: Date
