@@ -4,6 +4,7 @@ import { ICalculation } from './calculation.interface'
 import { Calculation } from './calculation.model'
 
 import { Subscription } from '../subscription/subscription.model'
+import { User } from '../user/user.model'
 import dayjs from 'dayjs'
 import ApiError from '../../../errors/ApiError'
 import { StatusCodes } from 'http-status-codes'
@@ -150,6 +151,26 @@ const createCalculationIntoDB = async (
   }
 
   const result = await Calculation.create(payload)
+
+  // Automatically update the user's draft to match the inputs of this last saved calculation
+  const draftUpdate: any = {}
+  if (payload.type === 'LOAD' && payload.loadData) {
+    draftUpdate['draft.loadCalculator'] = payload.loadData
+  } else if (payload.type === 'COST' && payload.costData) {
+    draftUpdate['draft.costsCalculator'] = payload.costData
+  } else if (payload.type === 'GOAL' && payload.goalData) {
+    draftUpdate['draft.ratePlanner'] = payload.goalData
+  }
+
+  if (Object.keys(draftUpdate).length > 0) {
+    try {
+      await User.findByIdAndUpdate(userId, { $set: draftUpdate })
+      console.log(`Updated user ${userId} draft to match last saved calculation of type ${payload.type}`)
+    } catch (e) {
+      console.error('Failed to update user draft on calculation save:', e)
+    }
+  }
+
   return result
 }
 

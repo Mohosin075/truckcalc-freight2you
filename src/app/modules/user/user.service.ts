@@ -264,19 +264,21 @@ const saveDraft = async (userId: string, draftData: any) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found.')
   }
 
+  const hasKeys = (obj: any) => obj && typeof obj === 'object' && Object.keys(obj).length > 0;
+
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     {
       $set: {
-        'draft.loadCalculator': draftData.loadCalculator || user.draft?.loadCalculator || {},
-        'draft.costsCalculator': draftData.costsCalculator || user.draft?.costsCalculator || {},
-        'draft.ratePlanner': draftData.ratePlanner || user.draft?.ratePlanner || {},
+        'draft.loadCalculator': hasKeys(draftData.loadCalculator) ? draftData.loadCalculator : (user.draft?.loadCalculator || {}),
+        'draft.costsCalculator': hasKeys(draftData.costsCalculator) ? draftData.costsCalculator : (user.draft?.costsCalculator || {}),
+        'draft.ratePlanner': hasKeys(draftData.ratePlanner) ? draftData.ratePlanner : (user.draft?.ratePlanner || {}),
       },
     },
     { new: true },
   )
 
-  return updatedUser?.draft
+  return updatedUser ? updatedUser.toJSON().draft : null
 }
 
 const getDraft = async (userId: string) => {
@@ -284,7 +286,7 @@ const getDraft = async (userId: string) => {
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found.')
   }
-  return user.draft || { loadCalculator: {}, costsCalculator: {}, ratePlanner: {} }
+  return user.toJSON().draft || { loadCalculator: {}, costsCalculator: {}, ratePlanner: {} }
 }
 
 export const UserServices = {
