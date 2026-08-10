@@ -26,18 +26,14 @@ const loadDataValidationSchema = z.object({
 const goalDataValidationSchema = z.object({
   desiredWeeklyProfit: z.number(),
   costPerMile: z.number(),
-  deadheadPayPerMile: z.number().optional(),
   daysPerWeek: z.number(),
   maxMilesPerDay: z.number(),
-  driverPercentage: z.number().optional(),
   loadedMilesNeeded: z.number(),
   minTargetRate: z.number(),
   totalRevenue: z.number(),
   totalCost: z.number(),
   maxDHPerDay: z.number(),
   maxDHPerWeek: z.number(),
-  driverPay: z.number().optional(),
-  ownerPay: z.number().optional(),
 });
 
 const costDataValidationSchema = z.object({

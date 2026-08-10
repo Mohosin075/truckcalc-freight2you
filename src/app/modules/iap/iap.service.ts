@@ -51,8 +51,8 @@ class IapService {
           throw new ApiError(StatusCodes.BAD_REQUEST, 'Receipt data is required for iOS validation')
         }
 
-        // Try Apple Sandbox verify endpoint first, then fallback to Production if needed
-        let appleResponse = await this.verifyAppleReceipt(receiptData, true)
+        // Try Apple Production verify endpoint first, then fallback to Sandbox if needed
+        let appleResponse = await this.verifyAppleReceipt(receiptData, false)
         
         // Status 21007 indicates sandbox receipt sent to production, retry on Sandbox
         if (appleResponse.status === 21007) {

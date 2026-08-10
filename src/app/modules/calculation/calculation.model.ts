@@ -27,18 +27,14 @@ const loadDataSchema = new Schema({
 const goalDataSchema = new Schema({
   desiredWeeklyProfit: { type: Number, required: true },
   costPerMile: { type: Number, required: true },
-  deadheadPayPerMile: { type: Number, required: true },
   daysPerWeek: { type: Number, required: true },
   maxMilesPerDay: { type: Number, required: true },
-  driverPercentage: { type: Number, required: true },
   loadedMilesNeeded: { type: Number, required: true },
   minTargetRate: { type: Number, required: true },
   totalRevenue: { type: Number, required: true },
   totalCost: { type: Number, required: true },
   maxDHPerDay: { type: Number, required: true },
   maxDHPerWeek: { type: Number, required: true },
-  driverPay: { type: Number, required: true },
-  ownerPay: { type: Number, required: true },
 }, { _id: false });
 
 const costDataSchema = new Schema({

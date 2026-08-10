@@ -28,18 +28,14 @@ export type ILoadCalculation = {
 export type IGoalCalculation = {
   desiredWeeklyProfit: number;
   costPerMile: number;
-  deadheadPayPerMile: number;
   daysPerWeek: number;
   maxMilesPerDay: number;
-  driverPercentage: number;
   loadedMilesNeeded: number;
   minTargetRate: number;
   totalRevenue: number;
   totalCost: number;
   maxDHPerDay: number;
   maxDHPerWeek: number;
-  driverPay: number;
-  ownerPay: number;
 };
 
 export type ICostCalculation = {
