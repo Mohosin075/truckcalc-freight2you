@@ -55,7 +55,7 @@ const adminLogin = catchAsync(async (req: Request, res: Response) => {
 const forgetPassword = catchAsync(async (req: Request, res: Response) => {
   const { email, phone } = req.body
   const result = await CustomAuthServices.forgetPassword(
-    email.toLowerCase().trim(),
+    email ? email.toLowerCase().trim() : undefined,
     phone,
   )
   sendResponse(res, {

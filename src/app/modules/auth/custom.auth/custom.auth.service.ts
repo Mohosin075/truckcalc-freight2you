@@ -52,7 +52,7 @@ const createUser = async (payload: IUser) => {
     otp,
   })
 
-  emailHelper.sendEmail(createAccount)
+  await emailHelper.sendEmail(createAccount)
 
   const user = await User.create({
     ...payload,
@@ -208,7 +208,7 @@ const forgetPassword = async (email?: string, phone?: string) => {
       otp,
     })
 
-    emailHelper.sendEmail(forgetPasswordEmailTemplate)
+    await emailHelper.sendEmail(forgetPasswordEmailTemplate)
   }
 
   return 'OTP sent successfully.'
@@ -220,7 +220,12 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Passwords do not match')
   }
 
-  const isTokenExist = await Token.findOne({ token: resetToken }).lean()
+  const actualToken =
+    resetToken && resetToken.startsWith('Bearer ')
+      ? resetToken.split(' ')[1]
+      : resetToken
+
+  const isTokenExist = await Token.findOne({ token: actualToken }).lean()
 
   if (!isTokenExist) {
     throw new ApiError(
@@ -264,7 +269,7 @@ const resetPassword = async (resetToken: string, payload: IResetPassword) => {
     password: hashPassword,
     authentication: {
       resetPassword: false,
-      otp: '',
+      oneTimeCode: '',
       expiresAt: null,
       latestRequestAt: null,
       requestCount: 0,
@@ -621,7 +626,7 @@ const resendOtp = async (
       type: authType,
     })
 
-    emailHelper.sendEmail(forgetPasswordEmailTemplate)
+    await emailHelper.sendEmail(forgetPasswordEmailTemplate)
   }
 
   return 'OTP sent successfully.'
