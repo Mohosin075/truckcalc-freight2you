@@ -17,7 +17,8 @@ const handleLoginLogic = async (
 ): Promise<IAuthResponse> => {
   const { authentication, verified, status, password } = isUserExist
 
-  const { restrictionLeftAt, wrongLoginAttempts } = authentication
+  const restrictionLeftAt = authentication?.restrictionLeftAt
+  const wrongLoginAttempts = authentication?.wrongLoginAttempts || 0
 
   if (!verified) {
     //send otp to user
