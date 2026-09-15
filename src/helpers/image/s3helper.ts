@@ -10,10 +10,10 @@ import { StatusCodes } from 'http-status-codes'
 import sharp from 'sharp'
 
 const s3Client = new S3Client({
-  region: config.aws.region,
+  region: config.aws.region || 'us-east-1',
   credentials: {
-    accessKeyId: config.aws.access_key_id!,
-    secretAccessKey: config.aws.secret_access_key!,
+    accessKeyId: config.aws.access_key_id || '',
+    secretAccessKey: config.aws.secret_access_key || '',
   },
 })
 
