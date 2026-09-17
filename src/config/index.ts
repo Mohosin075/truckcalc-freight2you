@@ -9,16 +9,12 @@ export default {
   node_env: process.env.NODE_ENV,
   clientUrl: process.env.clientUrl,
   port: process.env.PORT,
-  cors_origins: [
-    '*',
-    'http://localhost:51703',
-    'http://195.35.6.13:4005',
-    'http://195.35.6.13:4173',
-    'http://195.35.6.13:3001',
-    'http://localhost:3000',
-    'http://10.10.7.50:3000',
-    'http://10.10.26.208:3000',
-  ],
+  cors_origins: process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+    : [
+        'https://dashboard.truckcalc.net',
+        'https://truckcalc.net',
+      ],
   bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
   firebase_service_account_base64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64,
   server_map_api_key: process.env.SERVER_MAP_API_KEY,

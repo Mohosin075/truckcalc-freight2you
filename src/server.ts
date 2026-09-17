@@ -54,7 +54,12 @@ async function main() {
     // Socket.IO setup
     io = new Server(server, {
       pingTimeout: 60000,
-      cors: { origin: '*' },
+      cors: {
+        origin: (origin, callback) => {
+          callback(null, true)
+        },
+        credentials: true,
+      },
     })
 
     // Create admin user
