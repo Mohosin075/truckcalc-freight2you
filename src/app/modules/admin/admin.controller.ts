@@ -46,7 +46,19 @@ const getSubscriptionPlans = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const getAnalytics = catchAsync(async (req: Request, res: Response) => {
+  const result = await AdminService.getAnalytics();
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Analytics data retrieved successfully',
+    data: result,
+  });
+});
+
 export const AdminController = {
+  getAnalytics,
   getDashboardStats,
   getAllUsers,
   getSubscriptions,

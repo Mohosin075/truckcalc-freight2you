@@ -1,3 +1,4 @@
+import { Calculation } from '../calculation/calculation.model';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { User } from '../user/user.model';
@@ -109,7 +110,152 @@ const getSubscriptionPlans = async () => {
   return result;
 };
 
+
+const getAnalytics = async () => {
+  // 1. Total Calculations & Type Breakdown
+  const totalCalculations = await Calculation.countDocuments();
+  const byTypeRaw = await Calculation.aggregate([
+    { $group: { _id: '$type', count: { $sum: 1 } } },
+  ]);
+
+  const typeMap: Record<string, number> = { LOAD: 0, GOAL: 0, COST: 0 };
+  byTypeRaw.forEach((item: any) => {
+    typeMap[item._id] = item.count;
+  });
+
+  const calculationBreakdown = [
+    {
+      type: 'LOAD',
+      name: 'Load Calculations',
+      count: typeMap.LOAD,
+      percentage: totalCalculations > 0 ? Math.round((typeMap.LOAD / totalCalculations) * 100) : 0,
+      color: '#00D193',
+    },
+    {
+      type: 'GOAL',
+      name: 'Weekly Target Goals',
+      count: typeMap.GOAL,
+      percentage: totalCalculations > 0 ? Math.round((typeMap.GOAL / totalCalculations) * 100) : 0,
+      color: '#004D40',
+    },
+    {
+      type: 'COST',
+      name: 'Operating Cost / CPM',
+      count: typeMap.COST,
+      percentage: totalCalculations > 0 ? Math.round((typeMap.COST / totalCalculations) * 100) : 0,
+      color: '#E2C255',
+    },
+  ];
+
+  // 2. Freight Metrics from LOAD calculations
+  const loadMetrics = await Calculation.aggregate([
+    { $match: { type: 'LOAD', 'loadData.totalMiles': { $exists: true } } },
+    {
+      $group: {
+        _id: null,
+        totalMiles: { $sum: '$loadData.totalMiles' },
+        totalRevenue: { $sum: '$loadData.totalRevenue' },
+        totalProfit: { $sum: '$loadData.totalProfit' },
+        totalDH: { $sum: '$loadData.dhMiles' },
+        avgProfitPerMile: { $avg: '$loadData.profitPerMile' },
+        avgRatePerMile: { $avg: '$loadData.compensationPerMile' },
+        avgCostPerMile: { $avg: '$loadData.costPerMile' },
+      },
+    },
+  ]);
+  const loadStat = loadMetrics[0] || {
+    totalMiles: 0,
+    totalRevenue: 0,
+    totalProfit: 0,
+    totalDH: 0,
+    avgProfitPerMile: 0,
+    avgRatePerMile: 0,
+    avgCostPerMile: 0,
+  };
+
+  // 3. Operating Cost Metrics
+  const costMetrics = await Calculation.aggregate([
+    { $match: { type: 'COST', 'costData.weeklyFuelCost': { $exists: true } } },
+    {
+      $group: {
+        _id: null,
+        avgWeeklyFuel: { $avg: '$costData.weeklyFuelCost' },
+        avgWeeklyFixed: { $avg: '$costData.totalWeeklyFixed' },
+        avgWeeklyVariable: { $avg: '$costData.totalWeeklyVariable' },
+        avgWeeklyOperating: { $avg: '$costData.totalWeeklyOperatingCost' },
+      },
+    },
+  ]);
+  const costStat = costMetrics[0] || {
+    avgWeeklyFuel: 0,
+    avgWeeklyFixed: 0,
+    avgWeeklyVariable: 0,
+    avgWeeklyOperating: 0,
+  };
+
+  // 4. Monthly Calculation Timeline (Chart)
+  const monthlyTimeline = await Calculation.aggregate([
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+        loads: { $sum: { $cond: [{ $eq: ['$type', 'LOAD'] }, 1, 0] } },
+        goals: { $sum: { $cond: [{ $eq: ['$type', 'GOAL'] }, 1, 0] } },
+        costs: { $sum: { $cond: [{ $eq: ['$type', 'COST'] }, 1, 0] } },
+        total: { $sum: 1 },
+        totalMiles: { $sum: { $ifNull: ['$loadData.totalMiles', 0] } },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
+
+  const timelineFormatted = monthlyTimeline.map((item: any) => ({
+    month: item._id,
+    label: dayjs(item._id).format('MMM YYYY'),
+    loads: item.loads,
+    goals: item.goals,
+    costs: item.costs,
+    total: item.total,
+    miles: item.totalMiles,
+  }));
+
+  // 5. Recent 10 Calculations Log
+  const recentCalculations = await Calculation.find()
+    .populate('user', 'name email profile')
+    .sort({ createdAt: -1 })
+    .limit(10);
+
+  // 6. Subscription & User overview
+  const totalUsers = await User.countDocuments({ role: USER_ROLES.USER });
+  const activeSubscriptions = await Subscription.countDocuments({ status: 'active' });
+
+  return {
+    summary: {
+      totalCalculations,
+      totalMilesAnalyzed: Math.round(loadStat.totalMiles || 0),
+      totalFreightRevenue: Math.round(loadStat.totalRevenue || 0),
+      totalFreightProfit: Math.round(loadStat.totalProfit || 0),
+      deadheadMiles: Math.round(loadStat.totalDH || 0),
+      deadheadRatio: loadStat.totalMiles > 0 ? Number(((loadStat.totalDH / loadStat.totalMiles) * 100).toFixed(1)) : 0,
+      avgRatePerMile: Number((loadStat.avgRatePerMile || 0).toFixed(2)),
+      avgCostPerMile: Number((loadStat.avgCostPerMile || 0).toFixed(2)),
+      avgProfitPerMile: Number((loadStat.avgProfitPerMile || 0).toFixed(2)),
+      totalUsers,
+      activeSubscriptions,
+    },
+    calculationBreakdown,
+    operatingCostAverages: {
+      avgWeeklyFuel: Math.round(costStat.avgWeeklyFuel || 0),
+      avgWeeklyFixed: Math.round(costStat.avgWeeklyFixed || 0),
+      avgWeeklyVariable: Math.round(costStat.avgWeeklyVariable || 0),
+      avgWeeklyOperating: Math.round(costStat.avgWeeklyOperating || 0),
+    },
+    timeline: timelineFormatted,
+    recentCalculations,
+  };
+};
+
 export const AdminService = {
+  getAnalytics,
   getDashboardStats,
   getAllUsers,
   getSubscriptions,
