@@ -41,26 +41,32 @@ passport.use(
   ),
 )
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: config.google.client_id!,
-      clientSecret: config.google.client_secret!,
-      callbackURL: config.google.callback_url,
-      passReqToCallback: true,
-    },
-    async (req, accessToken, refreshToken, profile, done) => {
-      req.body.profile = profile
-      req.body.role = USER_ROLES.USER
+if (config.google.client_id && config.google.client_secret) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: config.google.client_id,
+        clientSecret: config.google.client_secret,
+        callbackURL: config.google.callback_url || '',
+        passReqToCallback: true,
+      },
+      async (req, accessToken, refreshToken, profile, done) => {
+        req.body.profile = profile
+        req.body.role = USER_ROLES.USER
 
-      try {
-        return done(null, req.body)
-      } catch (err) {
-        return done(err)
-      }
-    },
-  ),
-)
+        try {
+          return done(null, req.body)
+        } catch (err) {
+          return done(err)
+        }
+      },
+    ),
+  )
+} else {
+  console.warn(
+    '[Passport] Google OAuth is disabled because GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set in .env',
+  )
+}
 
 // Serialize the user
 passport.serializeUser((data: any, done) => {

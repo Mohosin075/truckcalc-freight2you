@@ -1,3 +1,4 @@
+import config from '../../../config'
 import express from 'express'
 import passport from 'passport'
 import { PassportAuthController } from './passport.auth/passport.auth.controller'
@@ -26,14 +27,29 @@ router.post(
   PassportAuthController.login,
 )
 
-router.get(
-  '/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }),
-)
+router.get('/google', (req, res, next) => {
+  if (!config.google.client_id || !config.google.client_secret) {
+    res.status(503).json({
+      success: false,
+      message: 'Google OAuth is not configured on this server.',
+    })
+    return
+  }
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next)
+})
 
 router.get(
   '/google/callback',
-  passport.authenticate('google', { session: false }),
+  (req, res, next) => {
+    if (!config.google.client_id || !config.google.client_secret) {
+      res.status(503).json({
+        success: false,
+        message: 'Google OAuth is not configured on this server.',
+      })
+      return
+    }
+    passport.authenticate('google', { session: false })(req, res, next)
+  },
   PassportAuthController.googleAuthCallback,
 )
 

@@ -86,7 +86,7 @@ const createContact = async (payload: IContact) => {
         <p>We have received your message and will get back to you as soon as possible.</p>
         <p>Here's a copy of your message:</p>
         <p><em>${payload.message}</em></p>
-        <p>Best regards,<br>The Healthcare and Financial Consultants Team</p>
+        <p>Best regards,<br>The TruckCalc Team</p>
       `,
     }
 
