@@ -19,12 +19,32 @@ const createCalculationIntoDB = async (
     status: { $in: ['active', 'trialing'] },
   }).populate('planId')
 
-  const isPremium = subscription && (
-    (subscription.planId as any)?.name === 'Pro' || 
-    (subscription.planId as any)?.name === 'Annual'
-  )
+  const isPremium =
+    subscription &&
+    ((subscription.planId as any)?.name === 'Pro' ||
+      (subscription.planId as any)?.name === 'Annual')
 
   if (!isPremium) {
+    // Check 7-day trial status from User
+    const user = await User.findById(userId)
+    const now = dayjs()
+
+    let trialEnd: dayjs.Dayjs | null = null
+    if (user?.subscriptionExpiresAt) {
+      trialEnd = dayjs(user.subscriptionExpiresAt)
+    } else if (user?.createdAt) {
+      trialEnd = dayjs(user.createdAt).add(7, 'day')
+    }
+
+    const isTrialActive = trialEnd ? trialEnd.isAfter(now) : false
+
+    if (!isTrialActive) {
+      throw new ApiError(
+        StatusCodes.FORBIDDEN,
+        'Your 7-day free trial has expired. Please upgrade to Pro to continue creating calculations.',
+      )
+    }
+
     const startOfToday = dayjs().startOf('day').toDate()
     const endOfToday = dayjs().endOf('day').toDate()
 
@@ -36,7 +56,7 @@ const createCalculationIntoDB = async (
     if (todayCount >= 10) {
       throw new ApiError(
         StatusCodes.FORBIDDEN,
-        'Daily calculation limit reached. Please upgrade to Pro.',
+        'Daily calculation limit reached (10/day during free trial). Upgrade to Pro for unlimited calculations.',
       )
     }
   }
@@ -239,24 +259,70 @@ const getSingleCalculationFromDB = async (
 const getStatsFromDB = async (userId: Types.ObjectId) => {
   const totalCalculations = await Calculation.countDocuments({ user: userId })
 
+  // 1. Check if user has an active Stripe or IAP subscription
   const subscription = await Subscription.findOne({
     userId,
     status: { $in: ['active', 'trialing'] },
   }).populate('planId')
 
-  let planLeftDays = 0
+  const now = dayjs()
+
   if (subscription) {
-    const now = dayjs()
     const end = dayjs(subscription.currentPeriodEnd)
-    planLeftDays = end.diff(now, 'day')
-    if (planLeftDays < 0) planLeftDays = 0
+    const diffHours = end.diff(now, 'hour', true)
+    const planLeftDays = Math.max(0, Math.ceil(diffHours / 24))
+
+    return {
+      totalCalculations,
+      planLeftDays,
+      subscriptionStatus: subscription.status,
+      planName: (subscription.planId as any)?.name || 'Pro',
+      isTrialExpired: false,
+    }
   }
 
-  return {
-    totalCalculations,
-    planLeftDays,
-    subscriptionStatus: subscription?.status || 'none',
-    planName: (subscription?.planId as any)?.name || 'No Plan',
+  // 2. User has no paid subscription: Check 7-day free trial from User
+  const user = await User.findById(userId)
+  let trialExpiresAt: dayjs.Dayjs
+
+  if (user?.subscriptionExpiresAt) {
+    trialExpiresAt = dayjs(user.subscriptionExpiresAt)
+  } else {
+    // If not set yet, trial starts from user.createdAt for 7 days
+    const createdAt = user?.createdAt ? dayjs(user.createdAt) : now
+    trialExpiresAt = createdAt.add(7, 'day')
+
+    // Persist this trial expiration to User model
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        subscriptionStatus: trialExpiresAt.isAfter(now) ? 'trialing' : 'expired',
+        subscriptionTier: 'trial',
+        trialUsed: true,
+        subscriptionExpiresAt: trialExpiresAt.toDate(),
+      },
+    })
+  }
+
+  const remainingHours = trialExpiresAt.diff(now, 'hour', true)
+  if (remainingHours > 0) {
+    // Active free trial: accurately count down days left (e.g. 7 on day 1, 6 on day 2, down to 1)
+    const planLeftDays = Math.max(1, Math.ceil(remainingHours / 24))
+    return {
+      totalCalculations,
+      planLeftDays,
+      subscriptionStatus: 'trialing',
+      planName: 'Free Trial',
+      isTrialExpired: false,
+    }
+  } else {
+    // Trial has expired
+    return {
+      totalCalculations,
+      planLeftDays: 0,
+      subscriptionStatus: 'expired',
+      planName: 'Expired Trial',
+      isTrialExpired: true,
+    }
   }
 }
 

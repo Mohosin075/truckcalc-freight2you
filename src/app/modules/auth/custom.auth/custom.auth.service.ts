@@ -16,6 +16,7 @@ import { JwtPayload } from 'jsonwebtoken'
 import { IUser } from '../../user/user.interface'
 import { emailHelper } from '../../../../helpers/emailHelper'
 import { ActivityService } from '../../activity/activity.service'
+import dayjs from 'dayjs'
 // import { emailQueue } from '../../../../helpers/bull-mq-producer'
 
 const createUser = async (payload: IUser) => {
@@ -330,7 +331,15 @@ const verifyAccount = async (
   if (!isUserExist.verified) {
     await User.findByIdAndUpdate(
       isUserExist._id,
-      { $set: { verified: true } },
+      {
+        $set: {
+          verified: true,
+          subscriptionStatus: 'trialing',
+          subscriptionTier: 'trial',
+          trialUsed: true,
+          subscriptionExpiresAt: dayjs().add(7, 'day').toDate(),
+        },
+      },
       { new: true },
     )
 

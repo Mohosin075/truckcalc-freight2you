@@ -1,3 +1,4 @@
+import ApiError from '../../../../errors/ApiError'
 import { Request, Response } from 'express'
 import catchAsync from '../../../../shared/catchAsync'
 import { CustomAuthServices } from './custom.auth.service'
@@ -101,7 +102,16 @@ const verifyAccount = catchAsync(async (req: Request, res: Response) => {
 })
 
 const getRefreshToken = catchAsync(async (req: Request, res: Response) => {
-  const { refreshToken } = req.cookies
+  const refreshToken =
+    req.cookies?.refreshToken ||
+    req.body?.refreshToken ||
+    (req.headers['refresh-token'] as string) ||
+    (req.headers['refreshtoken'] as string) ||
+    (req.headers['x-refresh-token'] as string)
+
+  if (!refreshToken) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Refresh token is required')
+  }
   const result = await CustomAuthServices.getRefreshToken(refreshToken)
   sendResponse(res, {
     statusCode: StatusCodes.OK,

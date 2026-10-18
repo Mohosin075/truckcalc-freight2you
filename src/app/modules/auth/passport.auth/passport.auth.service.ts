@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { USER_STATUS } from '../../../../enum/user'
 import { ILoginData } from '../../../../interfaces/auth'
 import { StatusCodes } from 'http-status-codes'
@@ -42,6 +43,10 @@ const handleGoogleLogin = async (
     status: USER_STATUS.ACTIVE,
     appId: id,
     role: payload.role,
+    subscriptionStatus: 'trialing',
+    subscriptionTier: 'trial',
+    trialUsed: true,
+    subscriptionExpiresAt: dayjs().add(7, 'day').toDate(),
   }
 
   try {
