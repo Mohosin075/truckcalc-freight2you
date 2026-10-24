@@ -87,7 +87,7 @@
         csvRows.add(["1. Load Profit & Surcharge Calculations"]);
         csvRows.add([
           'Date', 'Base Rate', 'Loaded Miles', 'Fuel Surcharge', 'Deadhead Miles', 'Tolls & Bonus', 
-          'Total Revenue', 'Total Cost', 'Driver Pay', 'Owner Pay', 'Net Profit'
+          'Total Revenue', 'Total Cost', 'Net Profit'
         ]);
         
         for (var item in loadCalcs) {
@@ -104,8 +104,6 @@
             formatNum(tolls + bonus, isCurrency: true),
             formatNum(getValue(item, 'totalRevenue'), isCurrency: true),
             formatNum(getValue(item, 'totalCost'), isCurrency: true),
-            formatNum(getValue(item, 'driverPay'), isCurrency: true),
-            formatNum(getValue(item, 'ownerPay'), isCurrency: true),
             formatNum(getValue(item, 'totalProfit'), isCurrency: true),
           ]);
         }
