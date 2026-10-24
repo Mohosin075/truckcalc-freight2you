@@ -292,11 +292,28 @@ const getStatsFromDB = async (userId: Types.ObjectId) => {
     const createdAt = user?.createdAt ? dayjs(user.createdAt) : now
     trialExpiresAt = createdAt.add(7, 'day')
 
+    // If not set yet, check device eligibility
+    let isEligible = !user?.trialUsed;
+    if (isEligible && user?.deviceId) {
+      const existingDeviceUser = await User.findOne({
+        deviceId: user.deviceId,
+        _id: { $ne: user._id },
+        trialUsed: true,
+      });
+      if (existingDeviceUser) {
+        isEligible = false;
+      }
+    }
+
+    if (!isEligible) {
+      trialExpiresAt = now;
+    }
+
     // Persist this trial expiration to User model
     await User.findByIdAndUpdate(userId, {
       $set: {
         subscriptionStatus: trialExpiresAt.isAfter(now) ? 'trialing' : 'expired',
-        subscriptionTier: 'trial',
+        subscriptionTier: isEligible ? 'trial' : 'none',
         trialUsed: true,
         subscriptionExpiresAt: trialExpiresAt.toDate(),
       },

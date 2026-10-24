@@ -329,19 +329,49 @@ const verifyAccount = async (
 
   //either newly created user or existing user
   if (!isUserExist.verified) {
-    await User.findByIdAndUpdate(
-      isUserExist._id,
-      {
-        $set: {
-          verified: true,
-          subscriptionStatus: 'trialing',
-          subscriptionTier: 'trial',
-          trialUsed: true,
-          subscriptionExpiresAt: dayjs().add(7, 'day').toDate(),
+    // Check if this device has already been used for a trial on another account
+    let isTrialEligible = !isUserExist.trialUsed;
+    if (isTrialEligible && isUserExist.deviceId) {
+      const existingDeviceUser = await User.findOne({
+        deviceId: isUserExist.deviceId,
+        _id: { $ne: isUserExist._id },
+        trialUsed: true,
+      });
+      if (existingDeviceUser) {
+        isTrialEligible = false;
+      }
+    }
+
+    if (isTrialEligible) {
+      await User.findByIdAndUpdate(
+        isUserExist._id,
+        {
+          $set: {
+            verified: true,
+            subscriptionStatus: 'trialing',
+            subscriptionTier: 'trial',
+            trialUsed: true,
+            subscriptionExpiresAt: dayjs().add(7, 'day').toDate(),
+          },
         },
-      },
-      { new: true },
-    )
+        { new: true },
+      );
+    } else {
+      // Device already used free trial: immediately expire trial and require subscription
+      await User.findByIdAndUpdate(
+        isUserExist._id,
+        {
+          $set: {
+            verified: true,
+            subscriptionStatus: 'expired',
+            subscriptionTier: 'none',
+            trialUsed: true,
+            subscriptionExpiresAt: new Date(),
+          },
+        },
+        { new: true },
+      );
+    }
 
     const tokens = AuthHelper.createToken(
       isUserExist._id,

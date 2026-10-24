@@ -113,14 +113,35 @@ const handleLoginLogic = async (
     )
   }
 
+  let shouldExpireTrial = false;
+  const targetDeviceId = payload.deviceId || isUserExist.deviceId;
+  if (targetDeviceId && isUserExist.subscriptionStatus === 'trialing') {
+    const deviceUsedTrial = await User.findOne({
+      deviceId: targetDeviceId,
+      _id: { $ne: isUserExist._id },
+      trialUsed: true,
+    });
+    if (deviceUsedTrial) {
+      shouldExpireTrial = true;
+    }
+  }
+
   await User.findByIdAndUpdate(
     isUserExist._id,
     {
       $set: {
         deviceToken: payload.deviceToken,
-        deviceId: payload.deviceId || isUserExist.deviceId,
+        deviceId: targetDeviceId,
         'authentication.restrictionLeftAt': null,
         'authentication.wrongLoginAttempts': 0,
+        ...(shouldExpireTrial
+          ? {
+              subscriptionStatus: 'expired',
+              subscriptionTier: 'none',
+              trialUsed: true,
+              subscriptionExpiresAt: new Date(),
+            }
+          : {}),
       },
     },
     { new: true },
