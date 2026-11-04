@@ -2,8 +2,6 @@ node_modules
 dist
 logs
 *.log
-.env
-.vscode/
 .vercel
 uploads/
 *.tsbuildinfo
@@ -14,3 +12,4 @@ yarn-error.log*
 .husky/_
 
 firebase-service-account.json
+config.bat

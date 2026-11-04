@@ -126,10 +126,20 @@ const adminLogin = async (payload: ILoginData): Promise<IAuthResponse> => {
     )
   }
 
-  if (isUserExist.role !== USER_ROLES.ADMIN) {
+  if (
+    isUserExist.role !== USER_ROLES.ADMIN &&
+    isUserExist.role !== USER_ROLES.SUPER_ADMIN
+  ) {
     throw new ApiError(
-      StatusCodes.BAD_REQUEST,
+      StatusCodes.FORBIDDEN,
       'You are not authorized to login as admin',
+    )
+  }
+
+  if (isUserExist.status !== USER_STATUS.ACTIVE) {
+    throw new ApiError(
+      StatusCodes.FORBIDDEN,
+      `Your account is ${isUserExist.status || 'inactive'}. Please contact support.`,
     )
   }
 
@@ -150,6 +160,8 @@ const adminLogin = async (payload: ILoginData): Promise<IAuthResponse> => {
     isUserExist.role,
     isUserExist.name!,
     isUserExist.email!,
+    undefined,
+    payload.rememberMe,
   )
 
   return authResponse(
